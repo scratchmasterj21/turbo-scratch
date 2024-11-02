@@ -45,7 +45,7 @@ const Description = ({
 }) => instructions !== 'unshared' && credits !== 'unshared' && (
     <div className={styles.description}>
         <div className={styles.projectLink}>
-            <a
+           {/*  <a
                 href={`https://scratch.mit.edu/projects/${projectId}/`}
                 target="_blank"
                 rel="noreferrer"
@@ -55,7 +55,7 @@ const Description = ({
                     description="Link to view project on Scratch"
                     id="tw.viewOnScratch"
                 />
-            </a>
+            </a>*/}
         </div>
         {instructions ? (
             <div>

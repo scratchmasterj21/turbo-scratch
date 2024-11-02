@@ -4,5 +4,8 @@ export default [
     {tag: 'art', intlLabel: messages.art},
     {tag: 'music', intlLabel: messages.music},
     {tag: 'games', intlLabel: messages.games},
-    {tag: 'stories', intlLabel: messages.stories}
+    {tag: 'stories', intlLabel: messages.stories},
+    {tag: 'griffpatch', intlLabel: messages.griffpatch},
+    {tag: 'beginner', intlLabel: messages.beginner}
+
 ];

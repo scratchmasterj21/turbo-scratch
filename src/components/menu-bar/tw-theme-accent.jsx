@@ -7,7 +7,7 @@ import {connect} from 'react-redux';
 import check from './check.svg';
 import dropdownCaret from './dropdown-caret.svg';
 import {MenuItem, Submenu} from '../menu/menu.jsx';
-import {ACCENT_BLUE, ACCENT_MAP, ACCENT_PURPLE, ACCENT_RED, ACCENT_RAINBOW, Theme} from '../../lib/themes/index.js';
+import {ACCENT_BLUE, ACCENT_MAP, ACCENT_PURPLE, ACCENT_RED, ACCENT_RAINBOW, ACCENT_PINK, ACCENT_GREEN, ACCENT_YELLOW, ACCENT_ORANGE, Theme} from '../../lib/themes/index.js';
 import {openAccentMenu, accentMenuOpen, closeSettingsMenu} from '../../reducers/menus.js';
 import {setTheme} from '../../reducers/theme.js';
 import {persistTheme} from '../../lib/themes/themePersistance.js';
@@ -34,6 +34,26 @@ const options = defineMessages({
         defaultMessage: 'Rainbow',
         description: 'Name of color scheme that uses a rainbow.',
         id: 'tw.accent.rainbow'
+    },
+    [ACCENT_PINK]: {
+        defaultMessage: 'Pink',
+        description: 'Name of color scheme that uses a pink.',
+        id: 'tw.accent.pink'
+    },
+    [ACCENT_GREEN]: {
+        defaultMessage: 'Green',
+        description: 'Name of color scheme that uses a green.',
+        id: 'tw.accent.green'
+    },
+    [ACCENT_YELLOW]: {
+        defaultMessage: 'Yellow',
+        description: 'Name of color scheme that uses a yellow.',
+        id: 'tw.accent.yellow'
+    },
+    [ACCENT_ORANGE]: {
+        defaultMessage: 'Orange',
+        description: 'Name of color scheme that uses a orange.',
+        id: 'tw.accent.orange'
     }
 });
 

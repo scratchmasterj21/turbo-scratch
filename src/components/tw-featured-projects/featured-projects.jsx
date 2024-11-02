@@ -70,7 +70,7 @@ class FeaturedProjects extends React.Component {
                         </div>
                     )}
                 </div>
-                <div className={styles.footer}>
+                {/*<div className={styles.footer}>
                     <a
                         target="_blank"
                         rel="noopener noreferrer"
@@ -82,7 +82,7 @@ class FeaturedProjects extends React.Component {
                             id="tw.featuredProjectsStudio"
                         />
                     </a>
-                </div>
+                </div>*/}
             </div>
         );
     }

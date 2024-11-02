@@ -98,7 +98,7 @@ const Footer = () => (
             </div>
 
             <div className={styles.footerText}>
-                <FormattedMessage
+            {/* <FormattedMessage
                     defaultMessage="Scratch is a project of the Scratch Foundation. It is available for free at {scratchDotOrg}."
                     description="A disclaimer that Scratch requires when referring to Scratch. {scratchDotOrg} is a link with text 'https://scratch.org/'"
                     id="tw.footer.scratchDisclaimer"
@@ -113,12 +113,12 @@ const Footer = () => (
                             </a>
                         )
                     }}
-                />
+                /> */}
             </div>
 
             <div className={styles.footerColumns}>
                 <div className={styles.footerSection}>
-                    <a href="credits.html">
+                 {/*    <a href="credits.html">
                         <FormattedMessage
                             defaultMessage="Credits"
                             description="Credits link in footer"
@@ -131,18 +131,18 @@ const Footer = () => (
                             description="Donation link in footer"
                             id="tw.footer.donate"
                         />
-                    </a>
+                    </a> */}
                 </div>
                 <div className={styles.footerSection}>
-                    <a href="https://desktop.turbowarp.org/">
+                    {/* <a href="https://desktop.turbowarp.org/">
                         {/* Do not translate */}
-                        {'TurboWarp Desktop'}
-                    </a>
-                    <a href="https://packager.turbowarp.org/">
+                        {/*{'TurboWarp Desktop'}*/}
+                    {/*</a>*/}
+                    {/*<a href="https://packager.turbowarp.org/">
                         {/* Do not translate */}
-                        {'TurboWarp Packager'}
-                    </a>
-                    <a href="https://docs.turbowarp.org/embedding">
+                        {/*{'TurboWarp Packager'}*/}
+                    {/*</a>*/}
+                     {/*<a href="https://docs.turbowarp.org/embedding">
                         <FormattedMessage
                             defaultMessage="Embedding"
                             description="Link in footer to embedding documentation for embedding link"
@@ -162,10 +162,10 @@ const Footer = () => (
                             description="Link in footer to additional documentation"
                             id="tw.footer.documentation"
                         />
-                    </a>
+                    </a>*/}
                 </div>
                 <div className={styles.footerSection}>
-                    <a href="https://scratch.mit.edu/users/GarboMuffin/#comments">
+                     {/*<a href="https://scratch.mit.edu/users/GarboMuffin/#comments">
                         <FormattedMessage
                             defaultMessage="Feedback & Bugs"
                             description="Link to feedback/bugs page"
@@ -185,7 +185,7 @@ const Footer = () => (
                             description="Link to privacy policy"
                             id="tw.privacy"
                         />
-                    </a>
+                    </a>*/}
                 </div>
             </div>
         </div>
@@ -345,9 +345,38 @@ class Interface extends React.Component {
                                     />
                                 </p>
                             </div>
+
                             <div className={styles.section}>
-                                <FeaturedProjects studio="27205657" />
+
+                            <FormattedMessage
+                                            // eslint-disable-next-line max-len
+                                            defaultMessage="{complete}"
+                                            description="CompleteProjects"
+                                            id="tw.complete.projects"
+                                            values={{
+                                                complete: (
+                                                    <b>Complete Projects</b>
+                                                )
+
+                                            }}
+                                        />
+                                {<FeaturedProjects studio="35846728" />}
+                   
+                                <FormattedMessage
+                                            // eslint-disable-next-line max-len
+                                            defaultMessage="{templates}"
+                                            description="ProjectTemplates"
+                                            id="tw.Project.templates"
+                                            values={{
+                                                templates: (
+                                                    <b>Project Templates</b>
+                                                )
+
+                                            }}
+                                        />
+                                {<FeaturedProjects studio="35846802" />}
                             </div>
+                 
                         </React.Fragment>
                     ) : null}
                 </div>

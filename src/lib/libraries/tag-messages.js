@@ -125,5 +125,15 @@ export default defineMessages({
         defaultMessage: 'Letters',
         description: 'Tag for filtering a library for letters',
         id: 'gui.libraryTags.letters'
+    },
+    griffpatch: {
+        defaultMessage: 'Griffpatch',
+        description: 'Griffpatch Tutorials',
+        id: 'gui.libraryTags.griffpatch'
+    },
+    beginner: {
+        defaultMessage: 'Beginner',
+        description: 'Beginner Tutorials',
+        id: 'gui.libraryTags.beginner'
     }
 });

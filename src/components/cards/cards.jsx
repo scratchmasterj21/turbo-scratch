@@ -104,6 +104,7 @@ class VideoStep extends React.Component {
     // We use the Wistia API here to update or pause the video dynamically:
     // https://wistia.com/support/developers/player-api
     componentDidUpdate (prevProps) {
+        if(!(this.props.video).includes("griff-") && !(prevProps.video).includes("griff-")) {
         // Ensure the wistia API is loaded and available
         if (!(window.Wistia && window.Wistia.api)) return;
 
@@ -119,17 +120,40 @@ class VideoStep extends React.Component {
         if (!this.props.expanded) {
             video.pause();
         }
+        }
     }
 
     componentWillUnmount () {
+        if(!(this.props.video).includes("griff-")) {
+
         const script = document.getElementById('wistia-video-content');
         script.parentNode.removeChild(script);
 
         const script2 = document.getElementById('wistia-video-api');
         script2.parentNode.removeChild(script2);
+        }
     }
 
     render () {
+        const griffVideo = (this.props.video).includes("griff-");
+        const griffVid = (this.props.video).substring(6, this.props.video.length);
+        if(griffVideo)
+        {
+            return (
+                <div className={styles.stepVideo}>
+                    <iframe 
+                        width="466px"
+                        height="257px"
+                        src={`https://www.youtube.com/embed/${griffVid}`}
+                        frameBorder="0" 
+                        allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" 
+                        allowFullScreen>
+
+                    </iframe>
+                </div>
+            )
+        }
+        else{
         return (
             <div className={styles.stepVideo}>
                 <div
@@ -141,6 +165,7 @@ class VideoStep extends React.Component {
                 </div>
             </div>
         );
+     }
     }
 }
 

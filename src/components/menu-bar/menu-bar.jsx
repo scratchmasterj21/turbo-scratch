@@ -6,7 +6,10 @@ import PropTypes from 'prop-types';
 import bindAll from 'lodash.bindall';
 import bowser from 'bowser';
 import React from 'react';
+import GoogleDrivePickerButton from './google-drive-btn.jsx'; // Adjust the import path as necessary
+import GoogleDriveLinkLoader from './google-drive-link-loader.jsx'; // Adjust the import path as necessary
 
+import {loadGoogleApis, uploadFileToGoogleDrive} from './drive-utils.jsx';
 import VM from 'scratch-vm';
 
 import Box from '../box/box.jsx';
@@ -32,6 +35,7 @@ import FramerateChanger from '../../containers/tw-framerate-changer.jsx';
 import ChangeUsername from '../../containers/tw-change-username.jsx';
 import CloudVariablesToggler from '../../containers/tw-cloud-toggler.jsx';
 import TWSaveStatus from './tw-save-status.jsx';
+import {projectTitleInitialState} from '../../reducers/project-title';
 
 import {openTipsLibrary, openSettingsModal, openRestorePointModal} from '../../reducers/modals';
 import {setPlayer} from '../../reducers/mode';
@@ -65,6 +69,9 @@ import {
     openEditMenu,
     closeEditMenu,
     editMenuOpen,
+    openGoogleMenu,
+    closeGoogleMenu,
+    GoogleMenuOpen,
     openLoginMenu,
     closeLoginMenu,
     loginMenuOpen,
@@ -91,6 +98,7 @@ import remixIcon from './icon--remix.svg';
 import dropdownCaret from './dropdown-caret.svg';
 import aboutIcon from './icon--about.svg';
 import fileIcon from './icon--file.svg';
+import googleIcon from './icon--google.svg';
 import editIcon from './icon--edit.svg';
 import addonsIcon from './addons.svg';
 import errorIcon from './tw-error.svg';
@@ -226,6 +234,7 @@ class MenuBar extends React.Component {
             'handleKeyPress',
             'handleRestoreOption',
             'getSaveToComputerHandler',
+            'handleSaveToGoogleDrive',
             'restoreOptionMessage'
         ]);
     }
@@ -352,6 +361,34 @@ class MenuBar extends React.Component {
             }
         };
     }
+
+    handleSaveToGoogleDrive = () => {
+        this.props.onRequestCloseFile();
+        this.props.saveProjectSb3().then(blob => {
+            const fileName = this.props.projectFilename;
+            loadGoogleApis((accessToken) => {
+                if (accessToken) {
+                    uploadFileToGoogleDrive(blob, fileName, accessToken,
+                        (result) => {
+                            console.log('Upload successful:', result);
+                            if (this.props.onProjectTelemetryEvent) {
+                                const metadata = this.collectMetadata();
+                                this.props.onProjectTelemetryEvent('projectDidSaveToGoogleDrive', metadata);
+                            }
+                        },
+                        (error) => {
+                            console.error('Upload failed:', error);
+                        }
+                    );
+                } else {
+                    console.error('No access token available.');
+                }
+            });
+        }).catch(error => {
+            console.error('Error fetching the project blob:', error);
+        });
+    };
+
     restoreOptionMessage (deletedItem) {
         switch (deletedItem) {
         case 'Sprite':
@@ -705,6 +742,7 @@ class MenuBar extends React.Component {
                                             />
                                         </MenuItem>
                                     </MenuSection>
+                                    
                                 </MenuBarMenu>
                             </MenuLabel>
                         )}
@@ -821,7 +859,7 @@ class MenuBar extends React.Component {
                                         </MenuItem>
                                     )}</CloudVariablesToggler>
                                 </MenuSection>
-                                <MenuSection>
+                                {/*<MenuSection>
                                     <MenuItem onClick={this.props.onClickSettingsModal}>
                                         <FormattedMessage
                                             defaultMessage="Advanced Settings"
@@ -829,7 +867,7 @@ class MenuBar extends React.Component {
                                             id="tw.menuBar.moreSettings"
                                         />
                                     </MenuItem>
-                                </MenuSection>
+                                </MenuSection> */}
                             </MenuBarMenu>
                         </MenuLabel>
                         {this.props.isTotallyNormal && (
@@ -896,18 +934,18 @@ class MenuBar extends React.Component {
                                 </span>
                             </div>
                         )}
-                        {this.props.onClickSettingsModal && (
+                        {/*{this.props.onClickSettingsModal && (
                             <div
                                 className={classNames(styles.menuBarItem, styles.hoverable)}
                                 onClick={this.props.onClickSettingsModal}
-                            >
-                                <img
+                            >*/}
+                                {/*<img
                                     src={advancedIcon}
                                     draggable={false}
                                     width={20}
                                     height={20}
-                                />
-                                <span className={styles.collapsibleLabel}>
+                                />*/}
+                                {/*<span className={styles.collapsibleLabel}>
                                     <FormattedMessage
                                         defaultMessage="Advanced"
                                         description="Button to open advanced settings menu"
@@ -915,8 +953,65 @@ class MenuBar extends React.Component {
                                     />
                                 </span>
                             </div>
-                        )}
+                        )}*/}
+   
                     </div>
+
+                    <MenuLabel
+                                open={this.props.googleMenuOpen}
+                                onOpen={this.props.onClickGoogle}
+                                onClose={this.props.onRequestCloseGoogle}
+                            >
+                                <img
+                                    src={googleIcon}
+                                    draggable={false}
+                                    width={20}
+                                    height={20}
+                                />
+                                <span className={styles.collapsibleLabel}>
+                                    <FormattedMessage
+                                        defaultMessage="Google"
+                                        description="Text for file dropdown menu"
+                                        id="gui.menuBar.google"
+                                    />
+                                </span>
+                                <img
+                                    src={dropdownCaret}
+                                    draggable={false}
+                                    width={8}
+                                    height={5}
+                                />
+                                <MenuBarMenu
+                                    className={classNames(styles.menuBarMenu)}
+                                    open={this.props.googleMenuOpen}
+                                    place={this.props.isRtl ? 'left' : 'right'}
+                                >
+<MenuSection>
+                                    <MenuItem>
+                                    <GoogleDriveLinkLoader
+                                        onProjectLoadFromExternalSource={this.props.onProjectLoadFromExternalSource}
+                                    />
+                                    </MenuItem>
+
+                                    </MenuSection>
+                                    <MenuSection>
+
+                                    <MenuItem>
+                                        <GoogleDrivePickerButton
+                                          developerKey="AIzaSyCvjU_vpqkCfb1EB56w4lo3vXNnvGHG4fs"
+                                          onProjectLoadFromExternalSource={this.props.onProjectLoadFromExternalSource} // You provide this from SBFileUploaderHOC
+                                    />
+                                    </MenuItem>
+  
+                                    <MenuItem onClick={this.handleSaveToGoogleDrive}
+                                    > Save to Google Drive
+                                    </MenuItem>
+                                    
+                                    </MenuSection>
+
+
+                        </MenuBarMenu>
+                        </MenuLabel>
 
                     <Divider className={styles.divider} />
 
@@ -931,6 +1026,7 @@ class MenuBar extends React.Component {
                                 />
                             </MenuBarItemTooltip>
                         </div>
+                        
                     ) : ((this.props.authorUsername && this.props.authorUsername !== this.props.username) ? (
                         <AuthorInfo
                             className={styles.authorInfo}
@@ -941,6 +1037,24 @@ class MenuBar extends React.Component {
                             username={this.props.authorUsername}
                         />
                     ) : null)}
+                    {this.props.canEditTitle && (
+                     <div className={styles.fileGroup}>
+                     <div
+                         aria-label={this.props.intl.formatMessage(ariaMessages.tutorials)}
+                         className={classNames(styles.menuBarItem, styles.hoverable)}
+                         onClick={this.props.onOpenTipLibrary}
+                     >
+                         <img
+                             className={styles.helpIcon}
+                             src={helpIcon}
+                         />
+                         <span className={styles.tutorialsLabel}>
+                             <FormattedMessage {...ariaMessages.tutorials} />
+                         </span>
+                     </div>
+                 </div>
+
+                    )}
                     {this.props.canShare ? (
                         (this.props.isShowingProject || this.props.isUpdating) && (
                             <div className={classNames(styles.menuBarItem)}>
@@ -1003,7 +1117,7 @@ class MenuBar extends React.Component {
                         ) : []))}
                     </div>
                     {/* tw: add a feedback button */}
-                    <div className={styles.menuBarItem}>
+                    {/*<div className={styles.menuBarItem}>
                         <a
                             className={styles.feedbackLink}
                             href="https://scratch.mit.edu/users/GarboMuffin/#comments"
@@ -1011,7 +1125,7 @@ class MenuBar extends React.Component {
                             target="_blank"
                         >
                             {/* todo: icon */}
-                            <Button className={styles.feedbackButton}>
+                            {/*<Button className={styles.feedbackButton}>
                                 <FormattedMessage
                                     defaultMessage="{APP_NAME} Feedback"
                                     description="Button to give feedback in the menu bar"
@@ -1022,7 +1136,7 @@ class MenuBar extends React.Component {
                                 />
                             </Button>
                         </a>
-                    </div>
+                    </div> */}
                 </div>
 
                 <div className={styles.accountInfoGroup}>
@@ -1067,6 +1181,7 @@ MenuBar.propTypes = {
     confirmReadyToReplaceProject: PropTypes.func,
     currentLocale: PropTypes.string.isRequired,
     editMenuOpen: PropTypes.bool,
+    openGoogleMenu: PropTypes.bool,
     enableCommunity: PropTypes.bool,
     fileMenuOpen: PropTypes.bool,
     handleSaveProject: PropTypes.func,
@@ -1118,6 +1233,7 @@ MenuBar.propTypes = {
     onRequestCloseAccount: PropTypes.func,
     onRequestCloseEdit: PropTypes.func,
     onRequestCloseFile: PropTypes.func,
+    onRequestCloseGoogle: PropTypes.func,
     onRequestCloseLogin: PropTypes.func,
     onRequestCloseMode: PropTypes.func,
     onRequestCloseSettings: PropTypes.func,
@@ -1126,6 +1242,7 @@ MenuBar.propTypes = {
     onSetTimeTravelMode: PropTypes.func,
     onShare: PropTypes.func,
     onStartSelectingFileUpload: PropTypes.func,
+    onProjectLoadFromExternalSource: PropTypes.func,
     onToggleLoginOpen: PropTypes.func,
     projectId: PropTypes.string,
     projectTitle: PropTypes.string,
@@ -1156,6 +1273,7 @@ const mapStateToProps = (state, ownProps) => {
         currentLocale: state.locales.locale,
         fileMenuOpen: fileMenuOpen(state),
         editMenuOpen: editMenuOpen(state),
+        googleMenuOpen: GoogleMenuOpen(state),
         errors: state.scratchGui.tw.compileErrors,
         errorsMenuOpen: errorsMenuOpen(state),
         isPlayerOnly: state.scratchGui.mode.isPlayerOnly,
@@ -1176,8 +1294,18 @@ const mapStateToProps = (state, ownProps) => {
         mode1920: isTimeTravel1920(state),
         mode1990: isTimeTravel1990(state),
         mode2020: isTimeTravel2020(state),
-        modeNow: isTimeTravelNow(state)
+        modeNow: isTimeTravelNow(state),
+        saveProjectSb3: state.scratchGui.vm.saveProjectSb3.bind(state.scratchGui.vm),
+        projectFilename: getProjectFilename(state.scratchGui.projectTitle, projectTitleInitialState)
     };
+};
+
+const getProjectFilename = (curTitle, defaultTitle) => {
+    let filenameTitle = curTitle;
+    if (!filenameTitle || filenameTitle.length === 0) {
+        filenameTitle = defaultTitle;
+    }
+    return `${filenameTitle.substring(0, 100)}.sb3`;
 };
 
 const mapDispatchToProps = dispatch => ({
@@ -1190,6 +1318,8 @@ const mapDispatchToProps = dispatch => ({
     onRequestCloseFile: () => dispatch(closeFileMenu()),
     onClickEdit: () => dispatch(openEditMenu()),
     onRequestCloseEdit: () => dispatch(closeEditMenu()),
+    onClickGoogle: () => dispatch(openGoogleMenu()),
+    onRequestCloseGoogle: () => dispatch(closeGoogleMenu()),
     onClickErrors: () => dispatch(openErrorsMenu()),
     onRequestCloseErrors: () => dispatch(closeErrorsMenu()),
     onClickLogin: () => dispatch(openLoginMenu()),

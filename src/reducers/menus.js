@@ -4,6 +4,7 @@ const CLOSE_MENU = 'scratch-gui/menus/CLOSE_MENU';
 const MENU_ABOUT = 'aboutMenu';
 const MENU_ACCOUNT = 'accountMenu';
 const MENU_EDIT = 'editMenu';
+const MENU_GOOGLE = 'googleMenu';
 const MENU_FILE = 'fileMenu';
 const MENU_LANGUAGE = 'languageMenu';
 const MENU_LOGIN = 'loginMenu';
@@ -59,6 +60,7 @@ const rootMenu = new Menu('root')
     )
     .addChild(new Menu(MENU_FILE))
     .addChild(new Menu(MENU_EDIT))
+    .addChild(new Menu(MENU_GOOGLE))
     .addChild(new Menu(MENU_MODE))
     .addChild(new Menu(MENU_SETTINGS))
     .addChild(new Menu(MENU_LOGIN))
@@ -70,6 +72,7 @@ const initialState = {
     [MENU_ACCOUNT]: false,
     [MENU_EDIT]: false,
     [MENU_FILE]: false,
+    [MENU_GOOGLE] : false,
     [MENU_LANGUAGE]: false,
     [MENU_LOGIN]: false,
     [MENU_MODE]: false,
@@ -128,6 +131,10 @@ const openEditMenu = () => openMenu(MENU_EDIT);
 const closeEditMenu = () => closeMenu(MENU_EDIT);
 const editMenuOpen = state => state.scratchGui.menus[MENU_EDIT];
 
+const openGoogleMenu = () => openMenu(MENU_GOOGLE);
+const closeGoogleMenu = () => closeMenu(MENU_GOOGLE);
+const GoogleMenuOpen = state => state.scratchGui.menus[MENU_GOOGLE];
+
 const openFileMenu = () => openMenu(MENU_FILE);
 const closeFileMenu = () => closeMenu(MENU_FILE);
 const fileMenuOpen = state => state.scratchGui.menus[MENU_FILE];
@@ -172,6 +179,9 @@ export {
     openEditMenu,
     closeEditMenu,
     editMenuOpen,
+    openGoogleMenu,
+    closeGoogleMenu,
+    GoogleMenuOpen,
     openFileMenu,
     closeFileMenu,
     fileMenuOpen,

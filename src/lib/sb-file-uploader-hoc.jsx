@@ -43,6 +43,7 @@ const SBFileUploaderHOC = function (WrappedComponent) {
                 'getProjectTitleFromFilename',
                 'handleFinishedLoadingUpload',
                 'handleStartSelectingFileUpload',
+                'handleProjectLoadFromExternalSource',
                 'handleChange',
                 'onload',
                 'removeFileObjects'
@@ -50,6 +51,33 @@ const SBFileUploaderHOC = function (WrappedComponent) {
             // tw: We have multiple instances of this HOC alive at a time. This flag fixes issues that arise from that.
             this.expectingFileUploadFinish = false;
         }
+
+          // Add a new method for handling external file loads, e.g., from Google Drive
+          handleProjectLoadFromExternalSource = (fileData, fileName) => {
+            let loadingSuccess = false;
+            console.log(fileData);
+            console.log(fileName);
+        // You might need to convert the fileData to the appropriate format here
+        // if it's not already an ArrayBuffer, depending on how your VM expects to receive the file data.
+            this.props.onLoadingStarted();
+            this.props.vm.loadProject(fileData)
+             .then(() => {
+                const uploadedProjectTitle = this.getProjectTitleFromFilename(fileName);
+                this.props.onSetProjectTitle(uploadedProjectTitle);
+                loadingSuccess = true;
+
+             })     
+        .catch(error => {
+            log.warn(error);
+            alert(this.props.intl.formatMessage(messages.loadError));
+        })
+        .then(() => {
+            this.props.onLoadingFinished("LOADING_VM_FILE_UPLOAD", loadingSuccess);
+            this.removeFileObjects();
+        });
+        };
+
+
         componentDidUpdate (prevProps) {
             if (this.props.isLoadingUpload && !prevProps.isLoadingUpload && this.expectingFileUploadFinish) {
                 this.handleFinishedLoadingUpload(); // cue step 5 below
@@ -248,6 +276,7 @@ const SBFileUploaderHOC = function (WrappedComponent) {
                 <React.Fragment>
                     <WrappedComponent
                         onStartSelectingFileUpload={this.handleStartSelectingFileUpload}
+                        onProjectLoadFromExternalSource={this.handleProjectLoadFromExternalSource}
                         {...componentProps}
                     />
                 </React.Fragment>
