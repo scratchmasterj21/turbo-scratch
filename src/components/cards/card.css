@@ -94,7 +94,7 @@
     flex-direction: column;
     cursor: move;
     z-index: 20;
-    overflow: hidden;
+    overflow: visible;
     box-shadow: 0px 5px 25px 5px $shadow;
     align-items: center;
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -169,7 +169,7 @@
     justify-content: center;
     align-items: center;
     position: relative;
-    text-align: center;
+    text-align: left;
 
     /* Min height prevents layout changing when images change */
     min-height: 256px;
@@ -303,4 +303,218 @@
 
 .hidden {
     display: none;
+}
+
+/* Add these styles to your existing CSS file */
+
+/* Ensure the video container has proper positioning context */
+.stepVideo {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: left;
+}
+
+/* Override any conflicting styles from the card container */
+.card .stepVideo {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+/* Ensure YouTube iframe doesn't interfere with controls 
+.stepVideo iframe {
+    pointer-events: none !important;
+}*/
+
+/* Fix for progress bar animations */
+.video-progress-bar {
+    position: relative;
+    width: 100%;
+    height: 4px;
+    background-color: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+    cursor: pointer;
+    margin-bottom: 16px;
+}
+
+.video-progress-bar:hover .video-progress-handle {
+    opacity: 1;
+}
+
+.video-progress-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background-color: #ff4444;
+    border-radius: 2px;
+    transition: width 0.1s ease-out;
+
+}
+
+.video-progress-handle {
+    position: absolute;
+    top: 50%;
+    width: 12px;
+    height: 12px;
+    background-color: #ff4444;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Custom volume slider styling */
+.video-volume-slider {
+ width: 60px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.3);
+  outline: none;
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.video-volume-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  background: #ff4444;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.video-volume-slider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  background: #ff4444;
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+/* Control buttons styling */
+.video-control-button {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 4px;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+  font-size: 14px;
+  backdrop-filter: blur(4px);
+}
+
+.video-control-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.video-control-button:active {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+/* Controls container */
+.video-controls-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.6) 50%, transparent 100%);
+  padding: 16px;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  z-index: 20;
+}
+
+/* Time display */
+.video-time-display {
+ color: white;
+  font-size: 12px;
+  font-family: monospace;
+  margin-left: 8px;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+}
+
+/* Ensure proper spacing */
+.video-controls-left {
+  display: flex;
+  align-items: left;
+  gap: 8px;
+}
+
+.video-controls-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.video-volume-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.progress-bar {
+    position: relative;
+    cursor: pointer;
+    border-radius: 2px;
+    margin-bottom: 16px;
+    width: 100%;
+    height: 4px;
+    background-color: rgba(255,255,255,0.3);
+    --progress: 0%;
+}
+
+.progress-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    border-radius: 2px;
+    background-color: #ff4444;
+    width: var(--progress);
+    transition: width 0.2s ease-out;
+}
+
+.progress-handle {
+    position: absolute;
+    top: 50%;
+    left: var(--progress);
+    transform: translate(-50%, -50%);
+    width: 12px;
+    height: 12px;
+    background-color: #ff4444;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    opacity: 0;
+    transition: opacity 0.2s ease-out, left 0.2s ease-out;
+}
+
+.progress-bar-container:hover .progress-handle {
+    opacity: 1 !important;
+}
+
+@media (max-width: 600px) {
+  .video-controls-overlay {
+    padding: 12px;
+  }
+  
+  .video-control-button {
+    margin: 0 2px;
+  }
+  
+  .video-volume-slider {
+    width: 40px;
+  }
+  
+  .video-time-display {
+    font-size: 10px;
+  }
 }
