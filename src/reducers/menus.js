@@ -13,6 +13,7 @@ const MENU_SETTINGS = 'settingsMenu';
 const MENU_ACCENT = 'accentMenu';
 const MENU_BLOCKS_THEME = 'blocksThemeMenu';
 const MENU_ERRORS = 'errorsMenu';
+const MENU_CHATBOT = 'chatbotMenu';
 
 class Menu {
     constructor (id) {
@@ -65,21 +66,23 @@ const rootMenu = new Menu('root')
     .addChild(new Menu(MENU_SETTINGS))
     .addChild(new Menu(MENU_LOGIN))
     .addChild(new Menu(MENU_ACCOUNT))
-    .addChild(new Menu(MENU_ABOUT));
+    .addChild(new Menu(MENU_ABOUT))
+    .addChild(new Menu(MENU_CHATBOT));
 
 const initialState = {
     [MENU_ABOUT]: false,
     [MENU_ACCOUNT]: false,
     [MENU_EDIT]: false,
     [MENU_FILE]: false,
-    [MENU_GOOGLE] : false,
+    [MENU_GOOGLE]: false,
     [MENU_LANGUAGE]: false,
     [MENU_LOGIN]: false,
     [MENU_MODE]: false,
     [MENU_SETTINGS]: false,
     [MENU_ACCENT]: false,
     [MENU_BLOCKS_THEME]: false,
-    [MENU_ERRORS]: false
+    [MENU_ERRORS]: false,
+    [MENU_CHATBOT]: false
 };
 
 const reducer = function (state, action) {
@@ -110,10 +113,12 @@ const reducer = function (state, action) {
         return state;
     }
 };
+
 const openMenu = menu => ({
     type: OPEN_MENU,
     menu: menu
 });
+
 const closeMenu = menu => ({
     type: CLOSE_MENU,
     menu: menu
@@ -167,6 +172,10 @@ const openErrorsMenu = () => openMenu(MENU_ERRORS);
 const closeErrorsMenu = () => closeMenu(MENU_ERRORS);
 const errorsMenuOpen = state => state.scratchGui.menus[MENU_ERRORS];
 
+const openChatbotMenu = () => openMenu(MENU_CHATBOT);
+const closeChatbotMenu = () => closeMenu(MENU_CHATBOT);
+const chatbotMenuOpen = state => state.scratchGui.menus[MENU_CHATBOT];
+
 export {
     reducer as default,
     initialState as menuInitialState,
@@ -205,5 +214,8 @@ export {
     blocksThemeMenuOpen,
     openErrorsMenu,
     closeErrorsMenu,
-    errorsMenuOpen
+    errorsMenuOpen,
+    openChatbotMenu,
+    closeChatbotMenu,
+    chatbotMenuOpen
 };

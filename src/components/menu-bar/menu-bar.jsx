@@ -38,6 +38,7 @@ import TWSaveStatus from './tw-save-status.jsx';
 import {projectTitleInitialState} from '../../reducers/project-title';
 
 import {openTipsLibrary, openSettingsModal, openRestorePointModal} from '../../reducers/modals';
+
 import {setPlayer} from '../../reducers/mode';
 import {
     isTimeTravel220022BC,
@@ -83,7 +84,10 @@ import {
     closeSettingsMenu,
     errorsMenuOpen,
     openErrorsMenu,
-    closeErrorsMenu
+    closeErrorsMenu,
+        openChatbotMenu,
+    closeChatbotMenu,
+    chatbotMenuOpen
 } from '../../reducers/menus';
 import {setFileHandle} from '../../reducers/tw.js';
 
@@ -216,34 +220,332 @@ MenuItemLink.propTypes = {
 };
 
 class MenuBar extends React.Component {
-    constructor (props) {
-        super(props);
-        bindAll(this, [
-            'handleClickSeeInside',
-            'handleClickNew',
-            'handleClickNewWindow',
-            'handleClickRemix',
-            'handleClickSave',
-            'handleClickSaveAsCopy',
-            'handleClickPackager',
-            'handleClickDesktopSettings',
-            'handleClickRestorePoints',
-            'handleClickSeeCommunity',
-            'handleClickShare',
-            'handleSetMode',
-            'handleKeyPress',
-            'handleRestoreOption',
-            'getSaveToComputerHandler',
-            'handleSaveToGoogleDrive',
-            'restoreOptionMessage'
-        ]);
+constructor (props) {
+    super(props);
+    bindAll(this, [
+        'handleClickSeeInside',
+        'handleClickNew',
+        'handleClickNewWindow',
+        'handleClickRemix',
+        'handleClickSave',
+        'handleClickSaveAsCopy',
+        'handleClickPackager',
+        'handleClickDesktopSettings',
+        'handleClickRestorePoints',
+        'handleClickSeeCommunity',
+        'handleClickShare',
+        'handleSetMode',
+        'handleKeyPress',
+        'handleRestoreOption',
+        'getSaveToComputerHandler',
+        'handleSaveToGoogleDrive',
+        'restoreOptionMessage',
+        'handleOpenChatbotModal',     // ← Add this
+        'handleCloseChatbotModal',     // ← And this
+        'handleMouseDown',           // Add this
+        'handleMouseMove',           // Add this
+        'handleMouseUp'              // Add this
+    ]);
+
+    this.state = {
+        showChatbotModal: false,      // ← Modal state here
+        isDragging: false,
+        dragOffset: { x: 0, y: 0 },
+        modalPosition: { x: 100, y: 100 },
+        screenSize: this.getScreenSize(),
+        modalDimensions: this.getModalDimensions(),
+        isResizing: false,
+        resizeType: null, // 'corner', 'edge-right', 'edge-bottom', etc.
+        resizeStartPos: { x: 0, y: 0 },
+        resizeStartSize: { width: 0, height: 0 }
+    };
+}
+
+handleResizeStart = (e, resizeType) => {
+    const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+    const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+    
+    this.setState({
+        isResizing: true,
+        resizeType: resizeType,
+        resizeStartPos: { x: clientX, y: clientY },
+        resizeStartSize: { 
+            width: this.state.modalDimensions.width, 
+            height: this.state.modalDimensions.height 
+        }
+    });
+    
+    // Add both mouse and touch event listeners
+    document.addEventListener('mousemove', this.handleResizeMove);
+    document.addEventListener('mouseup', this.handleResizeEnd);
+    document.addEventListener('touchmove', this.handleResizeMove, { passive: false });
+    document.addEventListener('touchend', this.handleResizeEnd);
+    
+    e.preventDefault();
+    e.stopPropagation();
+}
+
+// Handle resize movement
+handleResizeMove = (e) => {
+    if (!this.state.isResizing) return;
+    
+    const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+    const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+    
+    const deltaX = clientX - this.state.resizeStartPos.x;
+    const deltaY = clientY - this.state.resizeStartPos.y;
+    
+    const { resizeType, resizeStartSize } = this.state;
+    let newWidth = resizeStartSize.width;
+    let newHeight = resizeStartSize.height;
+    let newX = this.state.modalPosition.x;
+    let newY = this.state.modalPosition.y;
+    
+    // Minimum and maximum sizes
+    const minWidth = 300;
+    const minHeight = 200;
+    const maxWidth = window.innerWidth - 40;
+    const maxHeight = window.innerHeight - 40;
+    
+    switch (resizeType) {
+        case 'corner-se': // Bottom-right corner
+            newWidth = Math.min(Math.max(resizeStartSize.width + deltaX, minWidth), maxWidth);
+            newHeight = Math.min(Math.max(resizeStartSize.height + deltaY, minHeight), maxHeight);
+            break;
+            
+        case 'corner-sw': // Bottom-left corner
+            newWidth = Math.min(Math.max(resizeStartSize.width - deltaX, minWidth), maxWidth);
+            newHeight = Math.min(Math.max(resizeStartSize.height + deltaY, minHeight), maxHeight);
+            newX = this.state.modalPosition.x + (resizeStartSize.width - newWidth);
+            break;
+            
+        case 'corner-ne': // Top-right corner
+            newWidth = Math.min(Math.max(resizeStartSize.width + deltaX, minWidth), maxWidth);
+            newHeight = Math.min(Math.max(resizeStartSize.height - deltaY, minHeight), maxHeight);
+            newY = this.state.modalPosition.y + (resizeStartSize.height - newHeight);
+            break;
+            
+        case 'corner-nw': // Top-left corner
+            newWidth = Math.min(Math.max(resizeStartSize.width - deltaX, minWidth), maxWidth);
+            newHeight = Math.min(Math.max(resizeStartSize.height - deltaY, minHeight), maxHeight);
+            newX = this.state.modalPosition.x + (resizeStartSize.width - newWidth);
+            newY = this.state.modalPosition.y + (resizeStartSize.height - newHeight);
+            break;
+            
+        case 'edge-right':
+            newWidth = Math.min(Math.max(resizeStartSize.width + deltaX, minWidth), maxWidth);
+            break;
+            
+        case 'edge-bottom':
+            newHeight = Math.min(Math.max(resizeStartSize.height + deltaY, minHeight), maxHeight);
+            break;
+            
+        case 'edge-left':
+            newWidth = Math.min(Math.max(resizeStartSize.width - deltaX, minWidth), maxWidth);
+            newX = this.state.modalPosition.x + (resizeStartSize.width - newWidth);
+            break;
+            
+        case 'edge-top':
+            newHeight = Math.min(Math.max(resizeStartSize.height - deltaY, minHeight), maxHeight);
+            newY = this.state.modalPosition.y + (resizeStartSize.height - newHeight);
+            break;
     }
-    componentDidMount () {
-        document.addEventListener('keydown', this.handleKeyPress);
+    
+    this.setState({
+        modalDimensions: { width: newWidth, height: newHeight },
+        modalPosition: { x: newX, y: newY }
+    });
+    
+    e.preventDefault();
+}
+
+// Handle resize end
+handleResizeEnd = () => {
+    if (this.state.isResizing) {
+        this.setState({ 
+            isResizing: false, 
+            resizeType: null 
+        });
+        
+        // Remove event listeners
+        document.removeEventListener('mousemove', this.handleResizeMove);
+        document.removeEventListener('mouseup', this.handleResizeEnd);
+        document.removeEventListener('touchmove', this.handleResizeMove);
+        document.removeEventListener('touchend', this.handleResizeEnd);
     }
-    componentWillUnmount () {
-        document.removeEventListener('keydown', this.handleKeyPress);
+}
+
+// Method to detect screen size
+getScreenSize() {
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    
+    if (width <= 480) return 'mobile';
+    if (width <= 768) return 'tablet';
+    return 'desktop';
+}
+
+// Method to get modal dimensions based on screen size
+getModalDimensions() {
+    const screenSize = this.getScreenSize();
+    const padding = 20; // Padding from screen edges
+    
+    switch (screenSize) {
+        case 'mobile':
+            return {
+                width: Math.min(window.innerWidth - padding, 350),
+                height: Math.min(window.innerHeight - padding, 500),
+                maxWidth: '95vw',
+                maxHeight: '90vh'
+            };
+        case 'tablet':
+            return {
+                width: Math.min(window.innerWidth - padding, 500),
+                height: Math.min(window.innerHeight - padding, 600),
+                maxWidth: '90vw',
+                maxHeight: '85vh'
+            };
+        default: // desktop
+            return {
+                width: 600,
+                height: 550,
+                maxWidth: '80vw',
+                maxHeight: '80vh'
+            };
     }
+}
+handleMouseDown(e) {
+    // Check if we're clicking on a resize handle
+    const resizeHandle = e.target.closest('.resize-handle');
+    if (resizeHandle) {
+        const resizeType = resizeHandle.dataset.resizeType;
+        this.handleResizeStart(e, resizeType);
+        return;
+    }
+    
+    // Original drag functionality
+    if (e.target.closest('.modal-header')) {
+        const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+        const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+        
+        this.setState({
+            isDragging: true,
+            dragOffset: {
+                x: clientX - this.state.modalPosition.x,
+                y: clientY - this.state.modalPosition.y
+            }
+        });
+        
+        document.addEventListener('mousemove', this.handleMouseMove);
+        document.addEventListener('mouseup', this.handleMouseUp);
+        document.addEventListener('touchmove', this.handleMouseMove, { passive: false });
+        document.addEventListener('touchend', this.handleMouseUp);
+        e.preventDefault();
+    }
+}
+
+handleMouseMove(e) {
+    if (this.state.isDragging) {
+        const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+        const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+        
+        this.setState({
+            modalPosition: {
+                x: clientX - this.state.dragOffset.x,
+                y: clientY - this.state.dragOffset.y
+            }
+        });
+        
+        // Prevent scrolling on touch devices
+        e.preventDefault();
+    }
+}
+
+handleMouseUp() {
+    if (this.state.isDragging) {
+        this.setState({ isDragging: false });
+        
+        // Remove both mouse and touch event listeners
+        document.removeEventListener('mousemove', this.handleMouseMove);
+        document.removeEventListener('mouseup', this.handleMouseUp);
+        document.removeEventListener('touchmove', this.handleMouseMove);
+        document.removeEventListener('touchend', this.handleMouseUp);
+    }
+}
+
+componentDidMount() {
+    document.addEventListener('keydown', this.handleKeyPress);
+}
+
+componentWillUnmount() {
+    document.removeEventListener('keydown', this.handleKeyPress);
+    document.removeEventListener('mousemove', this.handleMouseMove);
+    document.removeEventListener('mouseup', this.handleMouseUp);
+    document.removeEventListener('touchmove', this.handleMouseMove);
+    document.removeEventListener('touchend', this.handleMouseUp);
+    
+    // Clean up resize listeners
+    document.removeEventListener('mousemove', this.handleResizeMove);
+    document.removeEventListener('mouseup', this.handleResizeEnd);
+    document.removeEventListener('touchmove', this.handleResizeMove);
+    document.removeEventListener('touchend', this.handleResizeEnd);
+    
+    window.removeEventListener('resize', this.handleResize);
+}
+
+// Handle window resize
+handleResize = () => {
+    const newScreenSize = this.getScreenSize();
+    const newDimensions = this.getModalDimensions();
+    
+    this.setState({
+        screenSize: newScreenSize,
+        modalDimensions: newDimensions
+    });
+}
+
+// Center modal on small screens
+centerModalOnSmallScreen() {
+    const { screenSize } = this.state;
+    if (screenSize !== 'desktop') {
+        const centerX = (window.innerWidth - this.state.modalDimensions.width) / 2;
+        const centerY = (window.innerHeight - this.state.modalDimensions.height) / 2;
+        
+        this.setState({
+            modalPosition: {
+                x: Math.max(10, centerX),
+                y: Math.max(10, centerY)
+            }
+        });
+    }
+}
+
+handleOpenChatbotModal() {
+    this.setState({ showChatbotModal: true }, () => {
+        // Center modal on small screens after opening
+        this.centerModalOnSmallScreen();
+    });
+    this.props.onRequestCloseChatbot();
+}
+handleCloseChatbotModal() {
+    this.setState({ showChatbotModal: false });
+}
+// Method to add URL parameters for iframe responsive behavior
+getIframeParams() {
+    const { screenSize, modalDimensions } = this.state;
+    const params = new URLSearchParams();
+    
+    // Pass screen info to iframe if the chatbot supports it
+    params.append('screenSize', screenSize);
+    params.append('width', modalDimensions.width);
+    params.append('height', modalDimensions.height);
+    params.append('isMobile', screenSize === 'mobile');
+    params.append('isTablet', screenSize === 'tablet');
+    
+    return params.toString() ? `?${params.toString()}` : '';
+}
+
+
     handleClickNew () {
         // if the project is dirty, and user owns the project, we will autosave.
         // but if they are not logged in and can't save, user should consider
@@ -512,6 +814,8 @@ class MenuBar extends React.Component {
                 {remixMessage}
             </Button>
         );
+
+
         // Show the About button only if we have a handler for it (like in the desktop app)
         const aboutButton = this.buildAboutMenu(this.props.onClickAbout);
         return (
@@ -521,6 +825,163 @@ class MenuBar extends React.Component {
                     styles.menuBar
                 )}
             >
+{this.state.showChatbotModal && (
+    <div 
+        className={styles.chatbotModal}
+        style={{
+            position: 'fixed',
+            left: `${this.state.modalPosition.x}px`,
+            top: `${this.state.modalPosition.y}px`,
+            width: `${this.state.modalDimensions.width}px`,
+            height: `${this.state.modalDimensions.height}px`,
+            zIndex: 10000,
+            backgroundColor: 'white',
+            border: '1px solid #ccc',
+            borderRadius: '8px',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+        }}
+        onMouseDown={this.handleMouseDown}
+        onTouchStart={this.handleMouseDown}
+    >
+        {/* Header */}
+        <div className={`${styles.modalHeader} modal-header`}>
+            <h3>Scratch Programming Chatbot</h3>
+            <button onClick={() => this.setState({ showChatbotModal: false })}>✖</button>
+        </div>
+        
+        {/* Iframe */}
+        <iframe
+            src={`https://chattybot-mocha.vercel.app/${this.getIframeParams()}`}
+            width="100%"
+            height={this.state.modalDimensions.height - 50}
+            style={{
+                border: 'none',
+                borderRadius: '0 0 8px 8px',
+                pointerEvents: (this.state.isDragging || this.state.isResizing) ? 'none' : 'auto'
+            }}
+        />
+        
+        {/* Resize Handles */}
+        {/* Corner handles */}
+        <div 
+            className="resize-handle resize-handle-se"
+            data-resize-type="corner-se"
+            style={{
+                position: 'absolute',
+                bottom: '-5px',
+                right: '-5px',
+                width: '20px',
+                height: '20px',
+                cursor: 'se-resize',
+                background: 'transparent',
+                touchAction: 'none'
+            }}
+        />
+        <div 
+            className="resize-handle resize-handle-sw"
+            data-resize-type="corner-sw"
+            style={{
+                position: 'absolute',
+                bottom: '-5px',
+                left: '-5px',
+                width: '20px',
+                height: '20px',
+                cursor: 'sw-resize',
+                background: 'transparent',
+                touchAction: 'none'
+            }}
+        />
+        <div 
+            className="resize-handle resize-handle-ne"
+            data-resize-type="corner-ne"
+            style={{
+                position: 'absolute',
+                top: '-5px',
+                right: '-5px',
+                width: '20px',
+                height: '20px',
+                cursor: 'ne-resize',
+                background: 'transparent',
+                touchAction: 'none'
+            }}
+        />
+        <div 
+            className="resize-handle resize-handle-nw"
+            data-resize-type="corner-nw"
+            style={{
+                position: 'absolute',
+                top: '-5px',
+                left: '-5px',
+                width: '20px',
+                height: '20px',
+                cursor: 'nw-resize',
+                background: 'transparent',
+                touchAction: 'none'
+            }}
+        />
+        
+        {/* Edge handles */}
+        <div 
+            className="resize-handle resize-handle-right"
+            data-resize-type="edge-right"
+            style={{
+                position: 'absolute',
+                top: '20px',
+                right: '-5px',
+                width: '10px',
+                height: 'calc(100% - 40px)',
+                cursor: 'e-resize',
+                background: 'transparent',
+                touchAction: 'none'
+            }}
+        />
+        <div 
+            className="resize-handle resize-handle-bottom"
+            data-resize-type="edge-bottom"
+            style={{
+                position: 'absolute',
+                bottom: '-5px',
+                left: '20px',
+                width: 'calc(100% - 40px)',
+                height: '10px',
+                cursor: 's-resize',
+                background: 'transparent',
+                touchAction: 'none'
+            }}
+        />
+        <div 
+            className="resize-handle resize-handle-left"
+            data-resize-type="edge-left"
+            style={{
+                position: 'absolute',
+                top: '20px',
+                left: '-5px',
+                width: '10px',
+                height: 'calc(100% - 40px)',
+                cursor: 'w-resize',
+                background: 'transparent',
+                touchAction: 'none'
+            }}
+        />
+        <div 
+            className="resize-handle resize-handle-top"
+            data-resize-type="edge-top"
+            style={{
+                position: 'absolute',
+                top: '-5px',
+                left: '20px',
+                width: 'calc(100% - 40px)',
+                height: '10px',
+                cursor: 'n-resize',
+                background: 'transparent',
+                touchAction: 'none'
+            }}
+        />
+    </div>
+)}
+
+
+
                 <div className={styles.mainMenu}>
                     <div className={styles.fileGroup}>
                         {this.props.errors.length > 0 && <div>
@@ -1012,7 +1473,45 @@ class MenuBar extends React.Component {
 
                         </MenuBarMenu>
                         </MenuLabel>
+                    {this.props.canEditTitle && (
+<MenuLabel
+    open={this.props.chatbotMenuOpen}
+    onOpen={this.props.onClickChatbot}
+    onClose={this.props.onRequestCloseChatbot}
+>
+<img
+    src="https://i.imgur.com/RLeZGow.png"
+    draggable={false}
+    width={20}
+    height={20}
+/>
 
+    <span className={styles.collapsibleLabel}>
+        <FormattedMessage
+            defaultMessage="Chatbot"
+            description="Text for chatbot dropdown menu"
+            id="gui.menuBar.chatbot"
+        />
+    </span>
+    <img
+        src={dropdownCaret}
+        draggable={false}
+        width={8}
+        height={5}
+    />
+    <MenuBarMenu
+        className={classNames(styles.menuBarMenu)}
+        open={this.props.chatbotMenuOpen}
+        place={this.props.isRtl ? 'left' : 'right'}
+    >
+        <MenuSection>
+            <MenuItem onClick={this.handleOpenChatbotModal}>
+                Open Scratch Chatbot
+            </MenuItem>
+        </MenuSection>
+    </MenuBarMenu>
+</MenuLabel>
+                    )}
                     <Divider className={styles.divider} />
 
                     {this.props.canEditTitle ? (
@@ -1254,7 +1753,11 @@ MenuBar.propTypes = {
     showComingSoon: PropTypes.bool,
     username: PropTypes.string,
     userOwnsProject: PropTypes.bool,
-    vm: PropTypes.instanceOf(VM).isRequired
+    vm: PropTypes.instanceOf(VM).isRequired,
+    chatbotMenuOpen: PropTypes.bool,
+onClickChatbot: PropTypes.func,
+onRequestCloseChatbot: PropTypes.func,
+
 };
 
 MenuBar.defaultProps = {
@@ -1296,7 +1799,10 @@ const mapStateToProps = (state, ownProps) => {
         mode2020: isTimeTravel2020(state),
         modeNow: isTimeTravelNow(state),
         saveProjectSb3: state.scratchGui.vm.saveProjectSb3.bind(state.scratchGui.vm),
-        projectFilename: getProjectFilename(state.scratchGui.projectTitle, projectTitleInitialState)
+        projectFilename: getProjectFilename(state.scratchGui.projectTitle, projectTitleInitialState),
+        chatbotMenuOpen: chatbotMenuOpen(state)
+
+
     };
 };
 
@@ -1343,7 +1849,10 @@ const mapDispatchToProps = dispatch => ({
     onClickSave: () => dispatch(manualUpdateProject()),
     onClickSaveAsCopy: () => dispatch(saveProjectAsCopy()),
     onSeeCommunity: () => dispatch(setPlayer(true)),
-    onSetTimeTravelMode: mode => dispatch(setTimeTravel(mode))
+    onSetTimeTravelMode: mode => dispatch(setTimeTravel(mode)),
+    onClickChatbot: () => dispatch(openChatbotMenu()),
+onRequestCloseChatbot: () => dispatch(closeChatbotMenu())
+
 });
 
 export default compose(
