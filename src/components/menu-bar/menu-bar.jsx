@@ -257,11 +257,36 @@ constructor (props) {
         isResizing: false,
         resizeType: null, // 'corner', 'edge-right', 'edge-bottom', etc.
         resizeStartPos: { x: 0, y: 0 },
-        resizeStartSize: { width: 0, height: 0 }
+        resizeStartSize: { width: 0, height: 0 },
+        isMinimized: false,
+        // Store dimensions before minimizing
+        preMinimizeDimensions: { width: 400, height: 500 }
     };
 }
 
+// Handle minimize/maximize functionality
+handleMinimizeToggle = () => {
+    const { isMinimized, modalDimensions } = this.state;
+    
+    if (isMinimized) {
+        // Restore to previous size
+        this.setState({
+            isMinimized: false,
+            modalDimensions: this.state.preMinimizeDimensions
+        });
+    } else {
+        // Minimize - store current dimensions
+        this.setState({
+            isMinimized: true,
+            preMinimizeDimensions: modalDimensions
+        });
+    }
+}
+
 handleResizeStart = (e, resizeType) => {
+    // Don't allow resizing when minimized
+    if (this.state.isMinimized) return;
+    
     const clientX = e.clientX || (e.touches && e.touches[0].clientX);
     const clientY = e.clientY || (e.touches && e.touches[0].clientY);
     
@@ -287,7 +312,7 @@ handleResizeStart = (e, resizeType) => {
 
 // Handle resize movement
 handleResizeMove = (e) => {
-    if (!this.state.isResizing) return;
+    if (!this.state.isResizing || this.state.isMinimized) return;
     
     const clientX = e.clientX || (e.touches && e.touches[0].clientX);
     const clientY = e.clientY || (e.touches && e.touches[0].clientY);
@@ -400,10 +425,10 @@ getModalDimensions() {
             };
         case 'tablet':
             return {
-                width: Math.min(window.innerWidth - padding, 500),
-                height: Math.min(window.innerHeight - padding, 600),
-                maxWidth: '90vw',
-                maxHeight: '85vh'
+                width: Math.min(window.innerWidth - padding, 420), // Reduced from 500
+                height: Math.min(window.innerHeight - padding, 480), // Reduced from 600
+                maxWidth: '65vw', // Reduced from 90vw
+                maxHeight: '70vh' // Reduced from 85vh
             };
         default: // desktop
             return {
@@ -414,10 +439,11 @@ getModalDimensions() {
             };
     }
 }
-handleMouseDown(e) {
+
+handleMouseDown = (e) => {
     // Check if we're clicking on a resize handle
     const resizeHandle = e.target.closest('.resize-handle');
-    if (resizeHandle) {
+    if (resizeHandle && !this.state.isMinimized) {
         const resizeType = resizeHandle.dataset.resizeType;
         this.handleResizeStart(e, resizeType);
         return;
@@ -444,7 +470,7 @@ handleMouseDown(e) {
     }
 }
 
-handleMouseMove(e) {
+handleMouseMove = (e) => {
     if (this.state.isDragging) {
         const clientX = e.clientX || (e.touches && e.touches[0].clientX);
         const clientY = e.clientY || (e.touches && e.touches[0].clientY);
@@ -461,7 +487,7 @@ handleMouseMove(e) {
     }
 }
 
-handleMouseUp() {
+handleMouseUp = () => {
     if (this.state.isDragging) {
         this.setState({ isDragging: false });
         
@@ -475,6 +501,7 @@ handleMouseUp() {
 
 componentDidMount() {
     document.addEventListener('keydown', this.handleKeyPress);
+    window.addEventListener('resize', this.handleResize);
 }
 
 componentWillUnmount() {
@@ -494,13 +521,17 @@ componentWillUnmount() {
 }
 
 // Handle window resize
+// Also update your handleResize method:
 handleResize = () => {
     const newScreenSize = this.getScreenSize();
     const newDimensions = this.getModalDimensions();
     
     this.setState({
         screenSize: newScreenSize,
-        modalDimensions: newDimensions
+        // Don't change modalDimensions when minimized - keep the stored dimensions
+        modalDimensions: this.state.isMinimized ? 
+            this.state.modalDimensions : 
+            newDimensions
     });
 }
 
@@ -520,19 +551,25 @@ centerModalOnSmallScreen() {
     }
 }
 
-handleOpenChatbotModal() {
+handleOpenChatbotModal = () => {
     this.setState({ showChatbotModal: true }, () => {
         // Center modal on small screens after opening
         this.centerModalOnSmallScreen();
     });
     this.props.onRequestCloseChatbot();
 }
-handleCloseChatbotModal() {
+
+handleCloseChatbotModal = () => {
     this.setState({ showChatbotModal: false });
 }
+
 // Method to add URL parameters for iframe responsive behavior
 getIframeParams() {
-    const { screenSize, modalDimensions } = this.state;
+    const { screenSize, modalDimensions, isMinimized } = this.state;
+    
+    // Don't pass parameters when minimized
+    if (isMinimized) return '';
+    
     const params = new URLSearchParams();
     
     // Pass screen info to iframe if the chatbot supports it
@@ -833,153 +870,224 @@ getIframeParams() {
             left: `${this.state.modalPosition.x}px`,
             top: `${this.state.modalPosition.y}px`,
             width: `${this.state.modalDimensions.width}px`,
-            height: `${this.state.modalDimensions.height}px`,
+            height: this.state.isMinimized ? '50px' : `${this.state.modalDimensions.height}px`,
             zIndex: 10000,
             backgroundColor: 'white',
             border: '1px solid #ccc',
             borderRadius: '8px',
             boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+            overflow: 'hidden',
+            transition: this.state.isDragging || this.state.isResizing ? 'none' : 'height 0.3s ease'
         }}
         onMouseDown={this.handleMouseDown}
         onTouchStart={this.handleMouseDown}
     >
         {/* Header */}
-        <div className={`${styles.modalHeader} modal-header`}>
-            <h3>Scratch Programming Chatbot</h3>
-            <button onClick={() => this.setState({ showChatbotModal: false })}>✖</button>
+        <div 
+            className={`${styles.modalHeader} modal-header`}
+            style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: '10px 15px',
+                backgroundColor: '#026efa',
+                borderBottom: this.state.isMinimized ? 'none' : '1px solid #ddd',
+                cursor: 'move',
+                height: '50px',
+                boxSizing: 'border-box'
+            }}
+        >
+            <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '600' }}>
+                Scratch Programming Chatbot
+            </h3>
+            <div style={{ display: 'flex', gap: '8px' }}>
+                <button
+                    onClick={this.handleMinimizeToggle}
+                    style={{
+                        background: 'none',
+                        border: 'none',
+                        fontSize: '16px',
+                        cursor: 'pointer',
+                        padding: '4px 8px',
+                        borderRadius: '4px',
+                        color: '#666',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: '24px',
+                        height: '24px'
+                    }}
+                    onMouseEnter={(e) => e.target.style.backgroundColor = '#e0e0e0'}
+                    onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                    title={this.state.isMinimized ? "Maximize" : "Minimize"}
+                >
+                    {this.state.isMinimized ? '□' : '−'}
+                </button>
+                <button
+                    onClick={() => this.setState({ showChatbotModal: false })}
+                    style={{
+                        background: 'none',
+                        border: 'none',
+                        fontSize: '16px',
+                        cursor: 'pointer',
+                        padding: '4px 8px',
+                        borderRadius: '4px',
+                        color: '#666',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: '24px',
+                        height: '24px'
+                    }}
+                    onMouseEnter={(e) => e.target.style.backgroundColor = '#ffebee'}
+                    onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                    title="Close"
+                >
+                    ✖
+                </button>
+            </div>
         </div>
         
-        {/* Iframe */}
-        <iframe
-            src={`https://chattybot-mocha.vercel.app/${this.getIframeParams()}`}
-            width="100%"
-            height={this.state.modalDimensions.height - 50}
-            style={{
-                border: 'none',
-                borderRadius: '0 0 8px 8px',
-                pointerEvents: (this.state.isDragging || this.state.isResizing) ? 'none' : 'auto'
-            }}
-        />
-        
-        {/* Resize Handles */}
-        {/* Corner handles */}
-        <div 
-            className="resize-handle resize-handle-se"
-            data-resize-type="corner-se"
-            style={{
-                position: 'absolute',
-                bottom: '-5px',
-                right: '-5px',
-                width: '20px',
-                height: '20px',
-                cursor: 'se-resize',
-                background: 'transparent',
-                touchAction: 'none'
-            }}
-        />
-        <div 
-            className="resize-handle resize-handle-sw"
-            data-resize-type="corner-sw"
-            style={{
-                position: 'absolute',
-                bottom: '-5px',
-                left: '-5px',
-                width: '20px',
-                height: '20px',
-                cursor: 'sw-resize',
-                background: 'transparent',
-                touchAction: 'none'
-            }}
-        />
-        <div 
-            className="resize-handle resize-handle-ne"
-            data-resize-type="corner-ne"
-            style={{
-                position: 'absolute',
-                top: '-5px',
-                right: '-5px',
-                width: '20px',
-                height: '20px',
-                cursor: 'ne-resize',
-                background: 'transparent',
-                touchAction: 'none'
-            }}
-        />
-        <div 
-            className="resize-handle resize-handle-nw"
-            data-resize-type="corner-nw"
-            style={{
-                position: 'absolute',
-                top: '-5px',
-                left: '-5px',
-                width: '20px',
-                height: '20px',
-                cursor: 'nw-resize',
-                background: 'transparent',
-                touchAction: 'none'
-            }}
-        />
-        
-        {/* Edge handles */}
-        <div 
-            className="resize-handle resize-handle-right"
-            data-resize-type="edge-right"
-            style={{
-                position: 'absolute',
-                top: '20px',
-                right: '-5px',
-                width: '10px',
-                height: 'calc(100% - 40px)',
-                cursor: 'e-resize',
-                background: 'transparent',
-                touchAction: 'none'
-            }}
-        />
-        <div 
-            className="resize-handle resize-handle-bottom"
-            data-resize-type="edge-bottom"
-            style={{
-                position: 'absolute',
-                bottom: '-5px',
-                left: '20px',
-                width: 'calc(100% - 40px)',
-                height: '10px',
-                cursor: 's-resize',
-                background: 'transparent',
-                touchAction: 'none'
-            }}
-        />
-        <div 
-            className="resize-handle resize-handle-left"
-            data-resize-type="edge-left"
-            style={{
-                position: 'absolute',
-                top: '20px',
-                left: '-5px',
-                width: '10px',
-                height: 'calc(100% - 40px)',
-                cursor: 'w-resize',
-                background: 'transparent',
-                touchAction: 'none'
-            }}
-        />
-        <div 
-            className="resize-handle resize-handle-top"
-            data-resize-type="edge-top"
-            style={{
-                position: 'absolute',
-                top: '-5px',
-                left: '20px',
-                width: 'calc(100% - 40px)',
-                height: '10px',
-                cursor: 'n-resize',
-                background: 'transparent',
-                touchAction: 'none'
-            }}
-        />
+        {/* Content Area - Only show when not minimized */}
+        {!this.state.isMinimized && (
+            <div style={{ 
+                height: 'calc(100% - 50px)', // Changed this line - use calc instead of manual subtraction
+                overflow: 'hidden',
+                position: 'relative'
+            }}>
+                {/* Iframe */}
+                <iframe
+                    key={`iframe-${this.state.isMinimized}`}
+                    src={`https://glittering-marigold-19caff.netlify.app/${this.getIframeParams()}`}
+                    width="100%"
+                    height="100%"
+                    style={{
+                        border: 'none',
+                        borderRadius: '0 0 8px 8px',
+                        pointerEvents: (this.state.isDragging || this.state.isResizing) ? 'none' : 'auto'
+                    }}
+                />
+                
+                {/* Resize Handles - Only show when not minimized */}
+                {/* Corner handles */}
+                <div 
+                    className="resize-handle resize-handle-se"
+                    data-resize-type="corner-se"
+                    style={{
+                        position: 'absolute',
+                        bottom: '-5px',
+                        right: '-5px',
+                        width: '20px',
+                        height: '20px',
+                        cursor: 'se-resize',
+                        background: 'transparent',
+                        touchAction: 'none'
+                    }}
+                />
+                <div 
+                    className="resize-handle resize-handle-sw"
+                    data-resize-type="corner-sw"
+                    style={{
+                        position: 'absolute',
+                        bottom: '-5px',
+                        left: '-5px',
+                        width: '20px',
+                        height: '20px',
+                        cursor: 'sw-resize',
+                        background: 'transparent',
+                        touchAction: 'none'
+                    }}
+                />
+                <div 
+                    className="resize-handle resize-handle-ne"
+                    data-resize-type="corner-ne"
+                    style={{
+                        position: 'absolute',
+                        top: '-5px',
+                        right: '-5px',
+                        width: '20px',
+                        height: '20px',
+                        cursor: 'ne-resize',
+                        background: 'transparent',
+                        touchAction: 'none'
+                    }}
+                />
+                <div 
+                    className="resize-handle resize-handle-nw"
+                    data-resize-type="corner-nw"
+                    style={{
+                        position: 'absolute',
+                        top: '-5px',
+                        left: '-5px',
+                        width: '20px',
+                        height: '20px',
+                        cursor: 'nw-resize',
+                        background: 'transparent',
+                        touchAction: 'none'
+                    }}
+                />
+                
+                {/* Edge handles */}
+                <div 
+                    className="resize-handle resize-handle-right"
+                    data-resize-type="edge-right"
+                    style={{
+                        position: 'absolute',
+                        top: '20px',
+                        right: '-5px',
+                        width: '10px',
+                        height: 'calc(100% - 40px)',
+                        cursor: 'e-resize',
+                        background: 'transparent',
+                        touchAction: 'none'
+                    }}
+                />
+                <div 
+                    className="resize-handle resize-handle-bottom"
+                    data-resize-type="edge-bottom"
+                    style={{
+                        position: 'absolute',
+                        bottom: '-5px',
+                        left: '20px',
+                        width: 'calc(100% - 40px)',
+                        height: '10px',
+                        cursor: 's-resize',
+                        background: 'transparent',
+                        touchAction: 'none'
+                    }}
+                />
+                <div 
+                    className="resize-handle resize-handle-left"
+                    data-resize-type="edge-left"
+                    style={{
+                        position: 'absolute',
+                        top: '20px',
+                        left: '-5px',
+                        width: '10px',
+                        height: 'calc(100% - 40px)',
+                        cursor: 'w-resize',
+                        background: 'transparent',
+                        touchAction: 'none'
+                    }}
+                />
+                <div 
+                    className="resize-handle resize-handle-top"
+                    data-resize-type="edge-top"
+                    style={{
+                        position: 'absolute',
+                        top: '-5px',
+                        left: '20px',
+                        width: 'calc(100% - 40px)',
+                        height: '10px',
+                        cursor: 'n-resize',
+                        background: 'transparent',
+                        touchAction: 'none'
+                    }}
+                />
+            </div>
+        )}
     </div>
 )}
-
 
 
                 <div className={styles.mainMenu}>

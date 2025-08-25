@@ -246,7 +246,6 @@
     resize: both;
     overflow: hidden;
     min-width: 400px;
-    min-height: 300px;
     max-width: 90vw;
     max-height: 90vh;
 }
@@ -299,12 +298,19 @@
     max-height: calc(100vh - 20px);
 }
 
-/* Style the iframe container */
+/* REMOVED THE PROBLEMATIC IFRAME RULE - Let JavaScript handle the height */
+/* 
+.chatbotModal iframe {
+    height: calc(100% - 50px);
+}
+*/
+
+/* Updated iframe rule - let inline styles take precedence */
 .chatbotModal iframe {
     border: none;
     border-radius: 0 0 8px 8px;
     width: 100%;
-    height: calc(100% - 50px); /* Subtract header height */
+    /* Height will be controlled by inline styles in JavaScript */
 }
 
 /* Optional: Add a resize handle indicator */
