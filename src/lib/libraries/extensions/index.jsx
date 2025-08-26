@@ -52,7 +52,78 @@ import returnIcon from './custom/return.svg';
 import galleryIcon from './gallery/gallery.svg';
 import {APP_NAME} from '../../brand';
 
+import ml2scratchIconURL from './ml2scratch/ml2scratch.png';
+import ml2scratchInsetIconURL from './ml2scratch/ml2scratch-small.png';
+
+import posenet2scratchIconURL from './posenet2scratch/posenet2scratch.png';
+import posenet2scratchInsetIconURL from './posenet2scratch/posenet2scratch-small.png';
+
+const translationMap = {
+    'ja': {
+        'gui.extension.ml2scratch.description': '機械学習を使う'
+    },
+    'ja-Hira': {
+        'gui.extension.ml2scratch.description': 'きかいがくしゅうをつかう'
+    }
+};
+
+const translationMap2 = {
+    'ja': {
+        'gui.extension.posenet2scratch.description': '身体の各部分の座標を取得する。'
+    },
+    'ja-Hira': {
+        'gui.extension.posenet2scratch.description': 'からだのかくぶぶんのざひょうをしゅとくする。'
+    }
+};
+
+const entry2 = {
+    name: 'posenet2Scratch',
+    extensionId: 'posenet2scratch',
+    collaborator: 'champierre',
+    iconURL: posenet2scratchIconURL,
+    insetIconURL: posenet2scratchInsetIconURL,
+    description: (
+        <FormattedMessage
+            defaultMessage="Obtain the coordinates of each part of the body."
+            description="Description for PoseNet2Scratch Blocks."
+            id="gui.extension.posenet2scratch.description"
+        />
+    ),
+    featured: true,
+    disabled: false,
+    bluetoothRequired: false,
+    internetConnectionRequired: true,
+    helpLink: 'https://github.com/champierre/posenet2scratch/',
+    translationMap: translationMap2
+};
+
+export {entry2};
+
+const entry = {
+    name: 'ML2Scratch',
+    extensionId: 'ml2scratch',
+    collaborator: 'champierre',
+    iconURL: ml2scratchIconURL,
+    insetIconURL: ml2scratchInsetIconURL,
+    description: (
+        <FormattedMessage
+            defaultMessage="ML2Scratch Blocks."
+            description="Description for ML2Scratch Blocks."
+            id="gui.extension.ml2scratch.description"
+        />
+    ),
+    featured: true,
+    disabled: false,
+    bluetoothRequired: false,
+    internetConnectionRequired: true,
+    helpLink: 'https://github.com/champierre/ml2scratch/',
+    translationMap: translationMap
+};
+
+export {entry}; // loadable-extension needs this line.
 export default [
+    entry,
+    entry2,
     {
         name: (
             <FormattedMessage
@@ -402,7 +473,7 @@ export default [
         featured: true
         // Not marked as incompatible with Scratch so that clicking on it doesn't show a prompt
     }
-];
+]; 
 
 export const galleryLoading = {
     name: (

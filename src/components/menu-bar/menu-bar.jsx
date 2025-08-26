@@ -1581,7 +1581,7 @@ getIframeParams() {
 
                         </MenuBarMenu>
                         </MenuLabel>
-                    {this.props.canEditTitle && (
+                {/*     {this.props.canEditTitle && (
 <MenuLabel
     open={this.props.chatbotMenuOpen}
     onOpen={this.props.onClickChatbot}
@@ -1619,7 +1619,7 @@ getIframeParams() {
         </MenuSection>
     </MenuBarMenu>
 </MenuLabel>
-                    )}
+                    )}*/}
                     <Divider className={styles.divider} />
 
                     {this.props.canEditTitle ? (
