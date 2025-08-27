@@ -8,6 +8,7 @@ import bowser from 'bowser';
 import React from 'react';
 import GoogleDrivePickerButton from './google-drive-btn.jsx'; // Adjust the import path as necessary
 import GoogleDriveLinkLoader from './google-drive-link-loader.jsx'; // Adjust the import path as necessary
+import Chatbot from '../chatbot/chatbot.jsx';
 
 import {loadGoogleApis, uploadFileToGoogleDrive} from './drive-utils.jsx';
 import VM from 'scratch-vm';
@@ -955,17 +956,10 @@ getIframeParams() {
                 overflow: 'hidden',
                 position: 'relative'
             }}>
-                {/* Iframe */}
-                <iframe
-                    key={`iframe-${this.state.isMinimized}`}
-                    src={`https://glittering-marigold-19caff.netlify.app/${this.getIframeParams()}`}
-                    width="100%"
-                    height="100%"
-                    style={{
-                        border: 'none',
-                        borderRadius: '0 0 8px 8px',
-                        pointerEvents: (this.state.isDragging || this.state.isResizing) ? 'none' : 'auto'
-                    }}
+                {/* Integrated Chatbot Component */}
+                <Chatbot
+                    vm={this.props.vm}
+                    onRequestClose={() => this.setState({ showChatbotModal: false })}
                 />
                 
                 {/* Resize Handles - Only show when not minimized */}
@@ -1581,7 +1575,7 @@ getIframeParams() {
 
                         </MenuBarMenu>
                         </MenuLabel>
-                {/*     {this.props.canEditTitle && (
+                    {this.props.canEditTitle && (
 <MenuLabel
     open={this.props.chatbotMenuOpen}
     onOpen={this.props.onClickChatbot}
@@ -1619,7 +1613,7 @@ getIframeParams() {
         </MenuSection>
     </MenuBarMenu>
 </MenuLabel>
-                    )}*/}
+                    )}
                     <Divider className={styles.divider} />
 
                     {this.props.canEditTitle ? (
@@ -1946,7 +1940,7 @@ const mapDispatchToProps = dispatch => ({
     onClickSettings: () => dispatch(openSettingsMenu()),
     onClickSettingsModal: () => {
         dispatch(closeEditMenu());
-        dispatch(openSettingsModal());
+        dispatch(openSettingsModal()); 
     },
     onRequestCloseSettings: () => dispatch(closeSettingsMenu()),
     onClickNew: needSave => {

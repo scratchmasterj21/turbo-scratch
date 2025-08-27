@@ -1,0 +1,41 @@
+.real-scratch-block-container {
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.real-scratch-block-container:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.scratchblocks-render {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+}
+
+.scratchblocks-render svg {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Loading state */
+.real-scratch-block-container .loading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 12px;
+    color: #666;
+}
+
+/* Error state */
+.real-scratch-block-container .error {
+    background-color: #ffebee;
+    color: #c62828;
+    padding: 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    text-align: center;
+}

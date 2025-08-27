@@ -1,0 +1,179 @@
+.blockContainer {
+    margin-bottom: 12px;
+}
+
+.scratchBlock {
+    display: inline-block;
+    padding: 8px 12px;
+    border-radius: 8px;
+    color: white;
+    font-weight: 600;
+    font-size: 14px;
+    line-height: 1.2;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    min-width: 120px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border: 2px solid;
+}
+
+.scratchBlock:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.scratchBlock.clickable {
+    cursor: pointer;
+}
+
+.scratchBlock.clickable:hover {
+    filter: brightness(1.1);
+}
+
+/* Hat blocks (events) */
+.blockHat {
+    border-radius: 8px 8px 4px 4px;
+    border-bottom: none;
+}
+
+.blockHat::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 8px;
+    right: 8px;
+    height: 8px;
+    background: inherit;
+    border: 2px solid;
+    border-top: none;
+    border-radius: 0 0 4px 4px;
+}
+
+/* Stack blocks (most blocks) */
+.blockStack {
+    border-radius: 4px;
+}
+
+.blockStack::before {
+    content: '';
+    position: absolute;
+    top: -4px;
+    left: 8px;
+    right: 8px;
+    height: 4px;
+    background: inherit;
+    border: 2px solid;
+    border-bottom: none;
+    border-radius: 4px 4px 0 0;
+}
+
+.blockStack::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 8px;
+    right: 8px;
+    height: 4px;
+    background: inherit;
+    border: 2px solid;
+    border-top: none;
+    border-radius: 0 0 4px 4px;
+}
+
+/* Reporter blocks (sensing, operators) */
+.blockReporter {
+    border-radius: 8px;
+    border-style: solid;
+    border-width: 2px;
+    background: white !important;
+    color: #333 !important;
+}
+
+.blockText {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px;
+}
+
+.multiLineBlock {
+    text-align: left;
+}
+
+.blockLine {
+    margin: 2px 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px;
+}
+
+.blockActions {
+    display: flex;
+    gap: 4px;
+    margin-top: 8px;
+    justify-content: center;
+}
+
+.actionButton {
+    background: #f8f9fa;
+    border: 1px solid #e5e7eb;
+    border-radius: 4px;
+    padding: 4px 8px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+}
+
+.actionButton:hover {
+    background: #e5e7eb;
+    border-color: #d1d5db;
+    transform: translateY(-1px);
+}
+
+.blockCategory {
+    font-size: 11px;
+    color: #6b7280;
+    margin-top: 4px;
+    text-align: center;
+    font-weight: 500;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .actionButton {
+        background: #374151;
+        border-color: #4b5563;
+        color: #f9fafb;
+    }
+    
+    .actionButton:hover {
+        background: #4b5563;
+        border-color: #6b7280;
+    }
+    
+    .blockCategory {
+        color: #9ca3af;
+    }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .scratchBlock {
+        font-size: 13px;
+        padding: 6px 10px;
+        min-width: 100px;
+    }
+    
+    .blockText,
+    .blockLine {
+        max-width: 150px;
+    }
+}
