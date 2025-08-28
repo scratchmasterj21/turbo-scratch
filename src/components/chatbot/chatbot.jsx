@@ -554,13 +554,13 @@ const Chatbot = ({ vm, onRequestClose }) => {
         <div className={styles.chatbotContainer}>
             {/* Header */}
             <div className={styles.chatbotHeader}>
-                <h3 className={styles.chatbotTitle}>
+                {/*<h3 className={styles.chatbotTitle}>
                     <FormattedMessage
                         defaultMessage="Scratch Programming Assistant"
                         description="Title for the integrated chatbot"
                         id="gui.chatbot.title"
                     />
-                </h3>
+                </h3>*/}
                 <div className={styles.headerActions}>
                     {/* Block Renderer Toggle */}
                     <button
@@ -627,13 +627,13 @@ const Chatbot = ({ vm, onRequestClose }) => {
                     >
                         ⚙️
                     </button>
-                    <button
+                    {/*<button
                         className={styles.closeButton}
                         onClick={onRequestClose}
                         title="Close chatbot"
                     >
                         ✖
-                    </button>
+                    </button>*/}
                 </div>
             </div>
 

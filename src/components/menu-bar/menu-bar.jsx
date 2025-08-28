@@ -899,7 +899,7 @@ getIframeParams() {
             }}
         >
             <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '600' }}>
-                Scratch Programming Chatbot
+                Scratch Programming Assistant
             </h3>
             <div style={{ display: 'flex', gap: '8px' }}>
                 <button
