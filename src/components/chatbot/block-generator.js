@@ -771,6 +771,32 @@ export const addStackToWorkspace = (blockDescriptions, vm) => {
                                             // Use shadow menu block exactly like Scratch's toolbox
                                             blockXml += `<value name="TO"><shadow type="motion_goto_menu"/></value>`;
                                         }
+                                        // Handle complex control blocks with substacks
+                                        else if (opcode === 'control_repeat') {
+                                            // Repeat block with number input and substack
+                                            blockXml += `<value name="TIMES"><shadow type="math_number"><field name="NUM">10</field></shadow></value>`;
+                                            blockXml += `<statement name="SUBSTACK"></statement>`;
+                                        }
+                                        else if (opcode === 'control_forever') {
+                                            // Forever block with substack
+                                            blockXml += `<statement name="SUBSTACK"></statement>`;
+                                        }
+                                        else if (opcode === 'control_repeat_until') {
+                                            // Repeat until block with condition and substack
+                                            blockXml += `<value name="CONDITION"><shadow type="sensing_touchingobject"><field name="TOUCHINGOBJECTMENU">edge</field></shadow></value>`;
+                                            blockXml += `<statement name="SUBSTACK"></statement>`;
+                                        }
+                                        else if (opcode === 'control_if') {
+                                            // If block with condition and substack
+                                            blockXml += `<value name="CONDITION"><shadow type="sensing_touchingobject"><field name="TOUCHINGOBJECTMENU">mouse-pointer</field></shadow></value>`;
+                                            blockXml += `<statement name="SUBSTACK"></statement>`;
+                                        }
+                                        else if (opcode === 'control_if_else') {
+                                            // If-else block with condition and two substacks
+                                            blockXml += `<value name="CONDITION"><shadow type="sensing_touchingobject"><field name="TOUCHINGOBJECTMENU">mouse-pointer</field></shadow></value>`;
+                                            blockXml += `<statement name="SUBSTACK"></statement>`;
+                                            blockXml += `<statement name="SUBSTACK2"></statement>`;
+                                        }
                                         
                                         blockXml += '</block>';
                                         
@@ -971,6 +997,32 @@ const addBlocksToWorkspace = (blockDescriptions, vm) => {
                 else if (opcode === 'motion_goto') {
                     // Use shadow menu block exactly like Scratch's toolbox
                     blockXml += `<value name="TO"><shadow type="motion_goto_menu"/></value>`;
+                }
+                // Handle complex control blocks with substacks
+                else if (opcode === 'control_repeat') {
+                    // Repeat block with number input and substack
+                    blockXml += `<value name="TIMES"><shadow type="math_number"><field name="NUM">10</field></shadow></value>`;
+                    blockXml += `<statement name="SUBSTACK"></statement>`;
+                }
+                else if (opcode === 'control_forever') {
+                    // Forever block with substack
+                    blockXml += `<statement name="SUBSTACK"></statement>`;
+                }
+                else if (opcode === 'control_repeat_until') {
+                    // Repeat until block with condition and substack
+                    blockXml += `<value name="CONDITION"><shadow type="sensing_touchingobject"><field name="TOUCHINGOBJECTMENU">edge</field></shadow></value>`;
+                    blockXml += `<statement name="SUBSTACK"></statement>`;
+                }
+                else if (opcode === 'control_if') {
+                    // If block with condition and substack
+                    blockXml += `<value name="CONDITION"><shadow type="sensing_touchingobject"><field name="TOUCHINGOBJECTMENU">mouse-pointer</field></shadow></value>`;
+                    blockXml += `<statement name="SUBSTACK"></statement>`;
+                }
+                else if (opcode === 'control_if_else') {
+                    // If-else block with condition and two substacks
+                    blockXml += `<value name="CONDITION"><shadow type="sensing_touchingobject"><field name="TOUCHINGOBJECTMENU">mouse-pointer</field></shadow></value>`;
+                    blockXml += `<statement name="SUBSTACK"></statement>`;
+                    blockXml += `<statement name="SUBSTACK2"></statement>`;
                 }
                 
                 blockXml += '</block>';
@@ -2019,6 +2071,7 @@ const getOpcodeFromDescription = (description) => {
         'turn right 15 degrees': 'motion_turnright',
         'turn left 15 degrees': 'motion_turnleft',
         'go to x: 0 y: 0': 'motion_gotoxy',
+        'go to random position': 'motion_goto',
         'glide 1 secs to x: 0 y: 0': 'motion_glideto',
         'say Hello for 2 secs': 'looks_sayforsecs',
         'say Hello': 'looks_say',
@@ -2028,17 +2081,30 @@ const getOpcodeFromDescription = (description) => {
         'hide': 'looks_hide',
         'show': 'looks_show',
         'play sound until done': 'sound_playuntildone',
+        'play sound [pop v] until done': 'sound_playuntildone',
         'start sound': 'sound_play',
         'change pitch by 10': 'sound_changeeffectby',
         'wait 1 secs': 'control_wait',
+        'wait 2 secs': 'control_wait',
         'repeat 10': 'control_repeat',
+        'repeat 10\n  move 10 steps\nend': 'control_repeat',
         'forever': 'control_forever',
+        'forever\n  move 10 steps\nend': 'control_forever',
+        'repeat until touching edge?': 'control_repeat_until',
+        'repeat until <touching [edge v]?>\n  move 10 steps\nend': 'control_repeat_until',
         'if <> then': 'control_if',
+        'if touching mouse pointer? then': 'control_if',
         'wait until <>': 'control_wait_until',
         'touching mouse pointer?': 'sensing_touchingobject',
         'touching edge?': 'sensing_touchingobject',
+        'create clone of myself': 'control_create_clone_of',
+        'create clone of balloon': 'control_create_clone_of',
+        'create clone of [balloon v]': 'control_create_clone_of',
+        'delete this clone': 'control_delete_this_clone',
         'set score to 0': 'data_setvariableto',
-        'change score by 1': 'data_changevariableby'
+        'set [score v] to [0]': 'data_setvariableto',
+        'change score by 1': 'data_changevariableby',
+        'change [score v] by [1]': 'data_changevariableby'
     };
 
     // Try exact match first
@@ -2109,6 +2175,18 @@ const getOpcodeFromDescription = (description) => {
     }
     if (description.includes('create clone of balloon')) {
         return 'control_create_clone_of';
+    }
+    if (description.includes('create clone of')) {
+        return 'control_create_clone_of';
+    }
+    if (description.includes('delete this clone')) {
+        return 'control_delete_this_clone';
+    }
+    if (description.includes('repeat until')) {
+        return 'control_repeat_until';
+    }
+    if (description.includes('if') && description.includes('then') && description.includes('else')) {
+        return 'control_if_else';
     }
     if (description.includes('delete this clone')) {
         return 'control_delete_this_clone';

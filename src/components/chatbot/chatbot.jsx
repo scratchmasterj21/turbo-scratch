@@ -45,7 +45,7 @@ const Chatbot = ({ vm, onRequestClose }) => {
         }
 
         // Load API key if available
-        const apiKey = localStorage.getItem('gemini-api-key');
+        const apiKey = localStorage.getItem('gemini_api_key');
         if (apiKey && apiKey !== 'YOUR_GEMINI_API_KEY') {
             geminiService.current.setApiKey(apiKey);
         }
@@ -133,7 +133,7 @@ const Chatbot = ({ vm, onRequestClose }) => {
     const getBotResponse = async (userMessage) => {
         try {
             // Check if we have a valid API key
-            const apiKey = localStorage.getItem('gemini-api-key');
+            const apiKey = localStorage.getItem('gemini_api_key');
             if (!apiKey || apiKey === 'YOUR_GEMINI_API_KEY') {
                 console.log('No valid API key found, using fallback responses');
                 return getFallbackResponse(userMessage);
@@ -187,17 +187,20 @@ const Chatbot = ({ vm, onRequestClose }) => {
                     {
                         name: 'Play sound until done',
                         code: 'play sound until done',
-                        category: 'sound'
+                        category: 'sound',
+                        opcode: 'sound_playuntildone'
                     },
                     {
                         name: 'Start sound',
                         code: 'start sound',
-                        category: 'sound'
+                        category: 'sound',
+                        opcode: 'sound_play'
                     },
                     {
                         name: 'Change pitch by 10',
                         code: 'change pitch by 10',
-                        category: 'sound'
+                        category: 'sound',
+                        opcode: 'sound_changeeffectby'
                     }
                 ]
             };
@@ -209,17 +212,20 @@ const Chatbot = ({ vm, onRequestClose }) => {
                     {
                         name: 'Repeat 10',
                         code: 'repeat 10\n  move 10 steps\nend',
-                        category: 'control'
+                        category: 'control',
+                        opcode: 'control_repeat'
                     },
                     {
                         name: 'Forever',
                         code: 'forever\n  move 10 steps\nend',
-                        category: 'control'
+                        category: 'control',
+                        opcode: 'control_forever'
                     },
                     {
                         name: 'Repeat until',
                         code: 'repeat until <touching [edge v]?>\n  move 10 steps\nend',
-                        category: 'control'
+                        category: 'control',
+                        opcode: 'control_repeat_until'
                     }
                 ]
             };
@@ -231,17 +237,20 @@ const Chatbot = ({ vm, onRequestClose }) => {
                     {
                         name: 'Set score to 0',
                         code: 'set [score v] to [0]',
-                        category: 'variables'
+                        category: 'variables',
+                        opcode: 'data_setvariableto'
                     },
                     {
                         name: 'Change score by 1',
                         code: 'change [score v] by [1]',
-                        category: 'variables'
+                        category: 'variables',
+                        opcode: 'data_changevariableby'
                     },
                     {
                         name: 'Show variable',
                         code: 'show variable [score v]',
-                        category: 'variables'
+                        category: 'variables',
+                        opcode: 'data_showvariable'
                     }
                 ]
             };
@@ -554,13 +563,13 @@ const Chatbot = ({ vm, onRequestClose }) => {
         <div className={styles.chatbotContainer}>
             {/* Header */}
             <div className={styles.chatbotHeader}>
-                {/*<h3 className={styles.chatbotTitle}>
+                <h3 className={styles.chatbotTitle}>
                     <FormattedMessage
                         defaultMessage="Scratch Programming Assistant"
                         description="Title for the integrated chatbot"
                         id="gui.chatbot.title"
                     />
-                </h3>*/}
+                </h3>
                 <div className={styles.headerActions}>
                     {/* Block Renderer Toggle */}
                     <button
@@ -627,13 +636,13 @@ const Chatbot = ({ vm, onRequestClose }) => {
                     >
                         ⚙️
                     </button>
-                    {/*<button
+                    <button
                         className={styles.closeButton}
                         onClick={onRequestClose}
                         title="Close chatbot"
                     >
                         ✖
-                    </button>*/}
+                    </button>
                 </div>
             </div>
 

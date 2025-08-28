@@ -135,9 +135,119 @@ export class GeminiService {
 
     // Parse AI response to extract code blocks and structure
     parseAIResponse(response) {
+        // Extract blocks from AI response
+        const codeBlocks = this.extractBlocksFromResponse(response);
+        
+        // Determine if this should be a stack response or individual blocks
+        const lowerResponse = response.toLowerCase();
+        const isGameRequest = lowerResponse.includes('game') || lowerResponse.includes('shooter') || lowerResponse.includes('space');
+        const isComplexRequest = lowerResponse.includes('multiple') || lowerResponse.includes('several') || lowerResponse.includes('different');
+        
+        // If it's a game or complex request and we have multiple blocks, structure as stacks
+        if ((isGameRequest || isComplexRequest) && codeBlocks.length > 3) {
+            // Group blocks into logical stacks
+            const stacks = this.groupBlocksIntoStacks(codeBlocks, response);
+            
+            return {
+                type: 'bot',
+                content: response,
+                stacks: stacks
+            };
+        }
+        
+        // Otherwise return as individual code blocks
+        return {
+            type: 'bot',
+            content: response,
+            codeBlocks: codeBlocks.length > 0 ? codeBlocks : undefined
+        };
+    }
+    
+    // Group blocks into logical stacks based on the AI response
+    groupBlocksIntoStacks(codeBlocks, response) {
+        const stacks = [];
+        const lowerResponse = response.toLowerCase();
+        
+        // Determine game type from response
+        let gameType = 'Game';
+        if (lowerResponse.includes('space') && lowerResponse.includes('shooter')) {
+            gameType = 'Space Shooter Game';
+        } else if (lowerResponse.includes('balloon') && lowerResponse.includes('pop')) {
+            gameType = 'Balloon Pop Game';
+        } else if (lowerResponse.includes('platformer')) {
+            gameType = 'Platformer Game';
+        } else if (lowerResponse.includes('racing')) {
+            gameType = 'Racing Game';
+        }
+        
+        // Group blocks by category or create logical groups
+        const eventBlocks = codeBlocks.filter(block => block.category === 'events' || block.code.includes('when'));
+        const controlBlocks = codeBlocks.filter(block => block.category === 'control' || block.code.includes('repeat') || block.code.includes('forever') || block.code.includes('if'));
+        const motionBlocks = codeBlocks.filter(block => block.category === 'motion' || block.code.includes('move') || block.code.includes('go to') || block.code.includes('turn'));
+        const variableBlocks = codeBlocks.filter(block => block.category === 'variables' || block.code.includes('score') || block.code.includes('variable'));
+        const soundBlocks = codeBlocks.filter(block => block.category === 'sound' || block.code.includes('play') || block.code.includes('sound'));
+        const looksBlocks = codeBlocks.filter(block => block.category === 'looks' || block.code.includes('say') || block.code.includes('show') || block.code.includes('hide'));
+        
+        // Create stacks based on available blocks
+        if (eventBlocks.length > 0) {
+            stacks.push({
+                name: 'Event Handlers',
+                blocks: eventBlocks
+            });
+        }
+        
+        if (controlBlocks.length > 0) {
+            stacks.push({
+                name: 'Control Logic',
+                blocks: controlBlocks
+            });
+        }
+        
+        if (motionBlocks.length > 0) {
+            stacks.push({
+                name: 'Movement',
+                blocks: motionBlocks
+            });
+        }
+        
+        if (variableBlocks.length > 0) {
+            stacks.push({
+                name: 'Variables & Scoring',
+                blocks: variableBlocks
+            });
+        }
+        
+        if (soundBlocks.length > 0) {
+            stacks.push({
+                name: 'Sound Effects',
+                blocks: soundBlocks
+            });
+        }
+        
+        if (looksBlocks.length > 0) {
+            stacks.push({
+                name: 'Visual Effects',
+                blocks: looksBlocks
+            });
+        }
+        
+        // If no specific groups, create a general stack
+        if (stacks.length === 0 && codeBlocks.length > 0) {
+            stacks.push({
+                name: `${gameType} Scripts`,
+                blocks: codeBlocks
+            });
+        }
+        
+        return stacks;
+    }
+    
+    // Extract blocks from AI response
+    extractBlocksFromResponse(response) {
+        const blocks = [];
+        
         // Look for code blocks in the response
         const codeBlockRegex = /```(?:scratch|blocks)?\s*\n([\s\S]*?)\n```/g;
-        const codeBlocks = [];
         let match;
 
         while ((match = codeBlockRegex.exec(response)) !== null) {
@@ -147,32 +257,150 @@ export class GeminiService {
             // Extract block name from first line or generate one
             const blockName = lines[0] || 'Scratch Block';
             
-            codeBlocks.push({
+            // Determine category and opcode from the code
+            const category = this.determineBlockCategory(code);
+            const opcode = this.determineBlockOpcode(code);
+            
+            blocks.push({
                 name: blockName,
                 code: code,
-                category: 'ai-generated'
+                category: category,
+                opcode: opcode
             });
         }
 
         // If no code blocks found, try to extract individual block references
-        if (codeBlocks.length === 0) {
+        if (blocks.length === 0) {
             const blockReferences = this.extractBlockReferences(response);
             if (blockReferences.length > 0) {
-                codeBlocks.push(...blockReferences);
+                blocks.push(...blockReferences);
             }
         }
 
         // Enhanced block extraction for complex requests
         const enhancedBlocks = this.extractEnhancedBlocks(response);
         if (enhancedBlocks.length > 0) {
-            codeBlocks.push(...enhancedBlocks);
+            blocks.push(...enhancedBlocks);
         }
 
-        return {
-            type: 'bot',
-            content: response,
-            codeBlocks: codeBlocks.length > 0 ? codeBlocks : undefined
-        };
+        return blocks;
+    }
+    
+    // Determine block category from code
+    determineBlockCategory(code) {
+        const lowerCode = code.toLowerCase();
+        
+        if (lowerCode.includes('when') || lowerCode.includes('event')) {
+            return 'events';
+        } else if (lowerCode.includes('move') || lowerCode.includes('go to') || lowerCode.includes('turn') || lowerCode.includes('glide')) {
+            return 'motion';
+        } else if (lowerCode.includes('say') || lowerCode.includes('think') || lowerCode.includes('show') || lowerCode.includes('hide') || lowerCode.includes('costume')) {
+            return 'looks';
+        } else if (lowerCode.includes('play') || lowerCode.includes('sound') || lowerCode.includes('pitch') || lowerCode.includes('volume')) {
+            return 'sound';
+        } else if (lowerCode.includes('repeat') || lowerCode.includes('forever') || lowerCode.includes('if') || lowerCode.includes('wait') || lowerCode.includes('clone')) {
+            return 'control';
+        } else if (lowerCode.includes('score') || lowerCode.includes('variable') || lowerCode.includes('set') || lowerCode.includes('change')) {
+            return 'variables';
+        } else if (lowerCode.includes('touching') || lowerCode.includes('distance') || lowerCode.includes('key') || lowerCode.includes('mouse')) {
+            return 'sensing';
+        }
+        
+        return 'ai-generated';
+    }
+    
+    // Determine block opcode from code
+    determineBlockOpcode(code) {
+        const lowerCode = code.toLowerCase();
+        
+        // Event blocks
+        if (lowerCode.includes('when green flag clicked')) {
+            return 'event_whenflagclicked';
+        } else if (lowerCode.includes('when this sprite clicked')) {
+            return 'event_whenthisspriteclicked';
+        } else if (lowerCode.includes('when i start as a clone')) {
+            return 'control_start_as_clone';
+        }
+        
+        // Motion blocks
+        else if (lowerCode.includes('move') && lowerCode.includes('steps')) {
+            return 'motion_movesteps';
+        } else if (lowerCode.includes('turn right')) {
+            return 'motion_turnright';
+        } else if (lowerCode.includes('turn left')) {
+            return 'motion_turnleft';
+        } else if (lowerCode.includes('go to random position')) {
+            return 'motion_goto';
+        } else if (lowerCode.includes('go to x:') && lowerCode.includes('y:')) {
+            return 'motion_gotoxy';
+        } else if (lowerCode.includes('glide')) {
+            return 'motion_glideto';
+        }
+        
+        // Looks blocks
+        else if (lowerCode.includes('say') && lowerCode.includes('for')) {
+            return 'looks_sayforsecs';
+        } else if (lowerCode.includes('say')) {
+            return 'looks_say';
+        } else if (lowerCode.includes('think') && lowerCode.includes('for')) {
+            return 'looks_thinkforsecs';
+        } else if (lowerCode.includes('think')) {
+            return 'looks_think';
+        } else if (lowerCode.includes('show')) {
+            return 'looks_show';
+        } else if (lowerCode.includes('hide')) {
+            return 'looks_hide';
+        }
+        
+        // Sound blocks
+        else if (lowerCode.includes('play sound') && lowerCode.includes('until done')) {
+            return 'sound_playuntildone';
+        } else if (lowerCode.includes('play sound')) {
+            return 'sound_play';
+        } else if (lowerCode.includes('change pitch')) {
+            return 'sound_changeeffectby';
+        }
+        
+        // Control blocks
+        else if (lowerCode.includes('wait') && lowerCode.includes('secs')) {
+            return 'control_wait';
+        } else if (lowerCode.includes('repeat') && lowerCode.includes('times')) {
+            return 'control_repeat';
+        } else if (lowerCode.includes('repeat')) {
+            return 'control_repeat';
+        } else if (lowerCode.includes('forever')) {
+            return 'control_forever';
+        } else if (lowerCode.includes('if') && lowerCode.includes('then')) {
+            return 'control_if';
+        } else if (lowerCode.includes('create clone')) {
+            return 'control_create_clone_of';
+        } else if (lowerCode.includes('delete this clone')) {
+            return 'control_delete_this_clone';
+        }
+        
+        // Variable blocks
+        else if (lowerCode.includes('set') && lowerCode.includes('score')) {
+            return 'data_setvariableto';
+        } else if (lowerCode.includes('change') && lowerCode.includes('score')) {
+            return 'data_changevariableby';
+        } else if (lowerCode.includes('show variable')) {
+            return 'data_showvariable';
+        } else if (lowerCode.includes('hide variable')) {
+            return 'data_hidevariable';
+        }
+        
+        // Sensing blocks
+        else if (lowerCode.includes('touching')) {
+            return 'sensing_touchingobject';
+        } else if (lowerCode.includes('distance')) {
+            return 'sensing_distanceto';
+        } else if (lowerCode.includes('key') && lowerCode.includes('pressed')) {
+            return 'sensing_keypressed';
+        } else if (lowerCode.includes('mouse down')) {
+            return 'sensing_mousedown';
+        }
+        
+        return null;
     }
 
     // Enhanced block extraction for complex requests
