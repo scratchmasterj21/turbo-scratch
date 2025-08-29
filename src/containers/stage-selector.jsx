@@ -204,7 +204,7 @@ const mapStateToProps = (state, {asset, id}) => ({
     url: asset && asset.encodeDataURI(),
     vm: state.scratchGui.vm,
     receivedBlocks: state.scratchGui.hoveredTarget.receivedBlocks &&
-            state.scratchGui.hoveredTarget.sprite === id,
+            state.scratchGui.hoveredTarget.sprite === String(id),
     raised: state.scratchGui.blockDrag,
     workspaceMetrics: state.scratchGui.workspaceMetrics
 });

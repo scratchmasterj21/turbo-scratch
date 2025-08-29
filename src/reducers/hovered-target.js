@@ -11,7 +11,7 @@ const reducer = function (state, action) {
     switch (action.type) {
     case SET_HOVERED_SPRITE:
         return {
-            sprite: action.spriteId,
+            sprite: action.spriteId ? String(action.spriteId) : null,
             receivedBlocks: false
         };
     case SET_RECEIVED_BLOCKS:

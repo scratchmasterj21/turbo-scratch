@@ -49,7 +49,7 @@ const SpriteList = function (props) {
 
                     // If the sprite has just received a block drop, used for green highlight
                     const receivedBlocks = (
-                        hoveredTarget.sprite === sprite.id &&
+                        hoveredTarget.sprite === String(sprite.id) &&
                     sprite.id !== editingTarget &&
                     hoveredTarget.receivedBlocks
                     );

@@ -89,6 +89,7 @@ const entry2 = {
             id="gui.extension.posenet2scratch.description"
         />
     ),
+    tags: ['scratch'],
     featured: true,
     disabled: false,
     bluetoothRequired: false,
@@ -112,6 +113,7 @@ const entry = {
             id="gui.extension.ml2scratch.description"
         />
     ),
+    tags: ['scratch'],
     featured: true,
     disabled: false,
     bluetoothRequired: false,
