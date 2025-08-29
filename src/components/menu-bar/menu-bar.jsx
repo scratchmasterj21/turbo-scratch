@@ -8,7 +8,7 @@ import bowser from 'bowser';
 import React from 'react';
 import GoogleDrivePickerButton from './google-drive-btn.jsx'; // Adjust the import path as necessary
 import GoogleDriveLinkLoader from './google-drive-link-loader.jsx'; // Adjust the import path as necessary
-import Chatbot from '../chatbot/chatbot.jsx';
+
 
 import {loadGoogleApis, uploadFileToGoogleDrive} from './drive-utils.jsx';
 import VM from 'scratch-vm';
@@ -380,6 +380,9 @@ handleResizeMove = (e) => {
     this.setState({
         modalDimensions: { width: newWidth, height: newHeight },
         modalPosition: { x: newX, y: newY }
+    }, () => {
+        // Send resize message to iframe after state update
+        this.sendResizeMessageToIframe();
     });
     
     e.preventDefault();
@@ -391,6 +394,9 @@ handleResizeEnd = () => {
         this.setState({ 
             isResizing: false, 
             resizeType: null 
+        }, () => {
+            // Send final resize message to iframe
+            this.sendResizeMessageToIframe();
         });
         
         // Remove event listeners
@@ -564,24 +570,18 @@ handleCloseChatbotModal = () => {
     this.setState({ showChatbotModal: false });
 }
 
-// Method to add URL parameters for iframe responsive behavior
-getIframeParams() {
-    const { screenSize, modalDimensions, isMinimized } = this.state;
-    
-    // Don't pass parameters when minimized
-    if (isMinimized) return '';
-    
-    const params = new URLSearchParams();
-    
-    // Pass screen info to iframe if the chatbot supports it
-    params.append('screenSize', screenSize);
-    params.append('width', modalDimensions.width);
-    params.append('height', modalDimensions.height);
-    params.append('isMobile', screenSize === 'mobile');
-    params.append('isTablet', screenSize === 'tablet');
-    
-    return params.toString() ? `?${params.toString()}` : '';
+// Method to send resize message to iframe
+sendResizeMessageToIframe = () => {
+    if (this.chatbotIframe && this.chatbotIframe.contentWindow) {
+        this.chatbotIframe.contentWindow.postMessage({
+            type: 'RESIZE',
+            width: this.state.modalDimensions.width,
+            height: this.state.modalDimensions.height
+        }, 'https://glittering-marigold-19caff.netlify.app');
+    }
 }
+
+
 
 
     handleClickNew () {
@@ -899,7 +899,7 @@ getIframeParams() {
             }}
         >
             <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '600' }}>
-                Scratch Programming Chatbot
+                Scratch Programming Assistant
             </h3>
             <div style={{ display: 'flex', gap: '8px' }}>
                 <button
@@ -956,10 +956,31 @@ getIframeParams() {
                 overflow: 'hidden',
                 position: 'relative'
             }}>
-                {/* Integrated Chatbot Component */}
-                <Chatbot
-                    vm={this.props.vm}
-                    onRequestClose={() => this.setState({ showChatbotModal: false })}
+                {/* External Website iframe */}
+                <iframe
+                    ref={(iframe) => { this.chatbotIframe = iframe; }}
+                    src={`https://glittering-marigold-19caff.netlify.app?width=${this.state.modalDimensions.width}&height=${this.state.modalDimensions.height}&isModal=true`}
+                    style={{
+                        width: '100%',
+                        height: '100%',
+                        border: 'none',
+                        backgroundColor: 'white',
+                        overflow: 'hidden'
+                    }}
+                    title="Scratch Programming Assistant"
+                    allow="microphone; camera; geolocation"
+                    sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
+                    onLoad={(e) => {
+                        // Send resize message to iframe when modal is resized
+                        const iframe = e.target;
+                        if (iframe.contentWindow) {
+                            iframe.contentWindow.postMessage({
+                                type: 'RESIZE',
+                                width: this.state.modalDimensions.width,
+                                height: this.state.modalDimensions.height
+                            }, 'https://glittering-marigold-19caff.netlify.app');
+                        }
+                    }}
                 />
                 
                 {/* Resize Handles - Only show when not minimized */}
@@ -1575,7 +1596,7 @@ getIframeParams() {
 
                         </MenuBarMenu>
                         </MenuLabel>
-                   {/* {this.props.canEditTitle && (
+                    {this.props.canEditTitle && (
 <MenuLabel
     open={this.props.chatbotMenuOpen}
     onOpen={this.props.onClickChatbot}
@@ -1589,11 +1610,11 @@ getIframeParams() {
 />
 
     <span className={styles.collapsibleLabel}>
-        <FormattedMessage
-            defaultMessage="Chatbot"
-            description="Text for chatbot dropdown menu"
-            id="gui.menuBar.chatbot"
-        />
+                            <FormattedMessage
+                        defaultMessage="Chatbot"
+                        description="Text for programming assistant dropdown menu"
+                        id="gui.menuBar.chatbot"
+                    />
     </span>
     <img
         src={dropdownCaret}
@@ -1607,13 +1628,13 @@ getIframeParams() {
         place={this.props.isRtl ? 'left' : 'right'}
     >
         <MenuSection>
-            <MenuItem onClick={this.handleOpenChatbotModal}>
-                Open Scratch Chatbot
-            </MenuItem>
+                                    <MenuItem onClick={this.handleOpenChatbotModal}>
+                            Open Chatbot
+                        </MenuItem>
         </MenuSection>
     </MenuBarMenu>
 </MenuLabel>
-                    )}*/}
+                    )}
                     <Divider className={styles.divider} />
 
                     {this.props.canEditTitle ? (
