@@ -1596,7 +1596,7 @@ sendResizeMessageToIframe = () => {
 
                         </MenuBarMenu>
                         </MenuLabel>
-                    {this.props.canEditTitle && (
+                    {/*{this.props.canEditTitle && (
 <MenuLabel
     open={this.props.chatbotMenuOpen}
     onOpen={this.props.onClickChatbot}
@@ -1634,7 +1634,7 @@ sendResizeMessageToIframe = () => {
         </MenuSection>
     </MenuBarMenu>
 </MenuLabel>
-                    )}
+                    )}*/}
                     <Divider className={styles.divider} />
 
                     {this.props.canEditTitle ? (
